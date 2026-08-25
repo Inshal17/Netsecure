@@ -4,9 +4,7 @@ import {
   AlertTriangle,
   ArrowRight,
   Bell,
-  CheckCircle2,
   ChevronRight,
-  CircleDashed,
   FileText,
   Gauge,
   HardDrive,
@@ -16,7 +14,6 @@ import {
   Search,
   Settings,
   ShieldCheck,
-  ShieldOff,
   Sparkles,
   UploadCloud,
   UserCircle,
@@ -80,14 +77,14 @@ type LayoutContext = {
 }
 
 const navItems = [
-  { to: '/', label: 'Dashboard', icon: Gauge },
+  { to: '/', label: 'Overview', icon: Gauge },
   { to: '/devices', label: 'Devices', icon: HardDrive },
-  { to: '/configuration', label: 'Configuration', icon: UploadCloud },
+  { to: '/configuration', label: 'Configurations', icon: UploadCloud },
   { to: '/analysis', label: 'Analysis', icon: Activity },
   { to: '/compliance', label: 'Compliance', icon: ShieldCheck },
   { to: '/findings', label: 'Findings', icon: AlertTriangle },
   { to: '/remediation', label: 'Remediation', icon: WrenchIcon },
-  { to: '/training', label: 'AI Training', icon: Sparkles },
+  { to: '/training', label: 'Training', icon: Sparkles },
   { to: '/frameworks', label: 'Frameworks', icon: Network },
   { to: '/reports', label: 'Reports', icon: FileText },
   { to: '/audit-logs', label: 'Audit Logs', icon: ListFilter },
@@ -179,21 +176,37 @@ function Layout() {
   }
 
   const pageTitleMap: Record<string, string> = {
-    '/': 'Dashboard',
-    '/devices': 'Device Inventory',
-    '/configuration': 'Configuration Upload',
-    '/analysis': 'Analysis Center',
-    '/compliance': 'Compliance Overview',
+    '/': 'Network Security Posture',
+    '/devices': 'Network Devices',
+    '/configuration': 'Configuration Ingestion',
+    '/analysis': 'Analysis Pipeline',
+    '/compliance': 'Compliance Management',
     '/findings': 'Security Findings',
     '/remediation': 'Remediation Center',
-    '/training': 'AI Training Module',
+    '/training': 'Parser Training',
     '/frameworks': 'Framework Management',
-    '/reports': 'Reports',
+    '/reports': 'Compliance Reports',
     '/audit-logs': 'Audit Logs',
     '/settings': 'Settings',
   }
 
+  const pageDescriptionMap: Record<string, string> = {
+    '/': 'Monitor configuration compliance across your network infrastructure.',
+    '/devices': 'Manage monitored infrastructure and compliance posture.',
+    '/configuration': 'Upload network device configurations for automated security analysis.',
+    '/analysis': 'Track staged validation across normalization and compliance checks.',
+    '/compliance': 'Review framework alignment and control coverage across the estate.',
+    '/findings': 'Investigate active security issues and remediation priorities.',
+    '/remediation': 'Coordinate vendor-aware corrective actions and evidence validation.',
+    '/training': 'Teach NetSecureAI how to interpret previously unknown vendor syntax.',
+    '/frameworks': 'Maintain supported control baselines and operational coverage.',
+    '/reports': 'View and distribute compliance evidence and operational summaries.',
+    '/audit-logs': 'Review operational changes, governance actions, and system events.',
+    '/settings': 'Tune governance controls, alerts, and platform behavior.',
+  }
+
   const currentTitle = pageTitleMap[location.pathname] ?? 'NetSecureAI'
+  const currentDescription = pageDescriptionMap[location.pathname] ?? 'Network security operations overview.'
 
   return (
     <div className="app-shell">
@@ -222,9 +235,10 @@ function Layout() {
             <button type="button" className="icon-button mobile-only" aria-label="Toggle navigation">
               <Menu size={18} />
             </button>
-            <div>
-              <p className="eyebrow">Security Operations</p>
+            <div className="header-copy">
+              <p className="eyebrow">Network Security Operations</p>
               <h1>{currentTitle}</h1>
+              <p className="header-subtitle">{currentDescription}</p>
             </div>
           </div>
 
@@ -242,7 +256,7 @@ function Layout() {
             </button>
             <div className="status-indicator">
               <span className="status-dot" />
-              System healthy
+              Operational
             </div>
             <div className="profile-pill">
               <UserCircle size={18} />
@@ -291,51 +305,76 @@ function DashboardPage() {
         </button>
       </div>
 
-      <div className="stats-grid">
-        <StatCard label="Overall Security Compliance Score" value={`${dashboard.snapshot.overallScore}%`} trend="+4.2% vs last cycle" icon={ShieldCheck} accent="cyan" />
+      <div className="stats-grid primary-stats">
         <StatCard label="Total Devices" value={String(dashboard.snapshot.totalDevices)} trend="Across all vendors" icon={HardDrive} accent="purple" />
-        <StatCard label="Compliant Devices" value={String(dashboard.snapshot.compliantDevices)} trend="Healthy baseline" icon={CheckCircle2} accent="green" />
-        <StatCard label="Non-Compliant Devices" value={String(dashboard.snapshot.nonCompliantDevices)} trend="Requires remediation" icon={ShieldOff} accent="red" />
-        <StatCard label="Critical Findings" value={String(dashboard.snapshot.criticalFindings)} trend="Priority action" icon={AlertTriangle} accent="red" />
-        <StatCard label="High Risk Findings" value={String(dashboard.snapshot.highRiskFindings)} trend="Escalated" icon={AlertTriangle} accent="amber" />
         <StatCard label="Configurations Analyzed" value={String(dashboard.snapshot.configurationsAnalyzed)} trend="This reporting period" icon={Network} accent="cyan" />
-        <StatCard label="Last Analysis" value={new Date(dashboard.snapshot.lastAnalysis).toLocaleString()} trend="Autonomous scan" icon={CircleDashed} accent="purple" />
+        <StatCard label="Overall Compliance" value={`${dashboard.snapshot.overallScore}%`} trend="↑ 4.2% from previous analysis" icon={ShieldCheck} accent="green" />
+        <StatCard label="Open Findings" value={String(dashboard.snapshot.criticalFindings + dashboard.snapshot.highRiskFindings)} trend="Priority action required" icon={AlertTriangle} accent="red" />
+      </div>
+
+      <div className="insight-row">
+        <div className="panel compact-panel">
+          <div className="insight-label">Risk Distribution</div>
+          <div className="risk-list">
+            <div><span className="dot red" /> Critical <strong>2</strong></div>
+            <div><span className="dot orange" /> High <strong>5</strong></div>
+            <div><span className="dot amber" /> Medium <strong>4</strong></div>
+            <div><span className="dot blue" /> Low <strong>2</strong></div>
+          </div>
+        </div>
+
+        <div className="panel compact-panel">
+          <div className="insight-label">Framework Coverage</div>
+          <div className="coverage-stack">
+            {[
+              { label: 'CIS', value: 91 },
+              { label: 'NIST', value: 84 },
+              { label: 'STIG', value: 88 },
+              { label: 'ISO', value: 79 },
+            ].map((item) => (
+              <div key={item.label} className="coverage-item">
+                <div className="coverage-head"><span>{item.label}</span><strong>{item.value}%</strong></div>
+                <div className="progress-track"><span style={{ width: `${item.value}%` }} /></div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="dashboard-grid">
         <div className="panel chart-panel">
-          <SectionHeader title="Compliance Score Trend" />
+          <SectionHeader title="Compliance Trend" />
           <div className="chart-box">
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={dashboard.trend}>
                 <defs>
                   <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#67e8f9" stopOpacity={0.45} />
-                    <stop offset="100%" stopColor="#67e8f9" stopOpacity={0.04} />
+                    <stop offset="0%" stopColor="#93c5fd" stopOpacity={0.28} />
+                    <stop offset="100%" stopColor="#93c5fd" stopOpacity={0.04} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid stroke="#203047" strokeDasharray="4 4" />
-                <XAxis dataKey="name" stroke="#8aa4be" />
-                <YAxis domain={[50, 100]} stroke="#8aa4be" />
+                <CartesianGrid stroke="#dfe7ef" strokeDasharray="4 4" />
+                <XAxis dataKey="name" stroke="#64748b" />
+                <YAxis domain={[50, 100]} stroke="#64748b" />
                 <Tooltip />
-                <Area type="monotone" dataKey="score" stroke="#5eead4" fill="url(#scoreFill)" strokeWidth={3} />
+                <Area type="monotone" dataKey="score" stroke="#2563eb" fill="url(#scoreFill)" strokeWidth={3} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         <div className="panel chart-panel">
-          <SectionHeader title="Findings by Severity" />
+          <SectionHeader title="Open Findings" />
           <div className="chart-box">
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={dashboard.severityBreakdown}>
-                <CartesianGrid stroke="#203047" strokeDasharray="4 4" />
-                <XAxis dataKey="name" stroke="#8aa4be" />
-                <YAxis stroke="#8aa4be" />
+                <CartesianGrid stroke="#dfe7ef" strokeDasharray="4 4" />
+                <XAxis dataKey="name" stroke="#64748b" />
+                <YAxis stroke="#64748b" />
                 <Tooltip />
                 <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                   {dashboard.severityBreakdown.map((entry) => (
-                    <Cell key={entry.name} fill={entry.name === 'Critical' ? '#ef4444' : entry.name === 'High' ? '#f59e0b' : entry.name === 'Medium' ? '#a78bfa' : '#38bdf8'} />
+                    <Cell key={entry.name} fill={entry.name === 'Critical' ? '#dc2626' : entry.name === 'High' ? '#f97316' : entry.name === 'Medium' ? '#d97706' : '#2563eb'} />
                   ))}
                 </Bar>
               </BarChart>
@@ -344,28 +383,28 @@ function DashboardPage() {
         </div>
 
         <div className="panel chart-panel">
-          <SectionHeader title="Compliance by Vendor" />
+          <SectionHeader title="Vendor Compliance" />
           <div className="chart-box">
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={dashboard.vendorCompliance} layout="vertical" margin={{ left: 10 }}>
-                <CartesianGrid stroke="#203047" strokeDasharray="4 4" />
-                <XAxis type="number" domain={[0, 100]} stroke="#8aa4be" />
-                <YAxis dataKey="name" type="category" width={110} stroke="#8aa4be" />
+                <CartesianGrid stroke="#dfe7ef" strokeDasharray="4 4" />
+                <XAxis type="number" domain={[0, 100]} stroke="#64748b" />
+                <YAxis dataKey="name" type="category" width={110} stroke="#64748b" />
                 <Tooltip />
-                <Bar dataKey="score" radius={[0, 6, 6, 0]} fill="#7dd3fc" />
+                <Bar dataKey="score" radius={[0, 6, 6, 0]} fill="#60a5fa" />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         <div className="panel chart-panel">
-          <SectionHeader title="Framework Compliance Comparison" />
+          <SectionHeader title="Framework Coverage" />
           <div className="chart-box">
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
-                <Pie data={dashboard.frameworkComparison} dataKey="score" nameKey="name" innerRadius={44} outerRadius={82} paddingAngle={3}>
+                <Pie data={dashboard.frameworkComparison} dataKey="score" nameKey="name" innerRadius={42} outerRadius={76} paddingAngle={3}>
                   {dashboard.frameworkComparison.map((entry, index) => (
-                    <Cell key={entry.name} fill={['#67e8f9', '#a78bfa', '#fbbf24', '#34d399'][index % 4]} />
+                    <Cell key={entry.name} fill={['#60a5fa', '#93c5fd', '#d1d5db', '#cbd5e1'][index % 4]} />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -377,18 +416,17 @@ function DashboardPage() {
 
       <div className="two-panel-grid">
         <div className="panel">
-          <SectionHeader title="Recent Activity" />
+          <SectionHeader title="Recent Configuration Analysis" />
           <div className="table-wrap">
             <table>
               <thead>
                 <tr>
                   <th>Device</th>
                   <th>Vendor</th>
-                  <th>Analysis</th>
-                  <th>Framework</th>
-                  <th>Score</th>
+                  <th>Configuration</th>
+                  <th>Last analyzed</th>
+                  <th>Compliance</th>
                   <th>Status</th>
-                  <th>Date</th>
                 </tr>
               </thead>
               <tbody>
@@ -397,10 +435,9 @@ function DashboardPage() {
                     <td>{row.device}</td>
                     <td>{row.vendor}</td>
                     <td>{row.analysis}</td>
-                    <td>{row.framework}</td>
+                    <td>{row.date}</td>
                     <td>{row.score}%</td>
                     <td><StatusBadge status={row.status} /></td>
-                    <td>{row.date}</td>
                   </tr>
                 ))}
               </tbody>
@@ -456,31 +493,36 @@ function DevicesPage() {
   return (
     <div className="page-stack">
       <div className="panel">
-        <div className="filter-row">
-          <select value={vendorFilter} onChange={(event) => setVendorFilter(event.target.value)}>
-            <option value="All">All vendors</option>
-            {vendorOptions.map((vendor) => (
-              <option key={vendor} value={vendor}>{vendor}</option>
-            ))}
-          </select>
-          <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
-            <option value="All">All device types</option>
-            {[...new Set(devices.map((device) => device.deviceType))].map((deviceType) => (
-              <option key={deviceType} value={deviceType}>{deviceType}</option>
-            ))}
-          </select>
-          <select value={riskFilter} onChange={(event) => setRiskFilter(event.target.value)}>
-            <option value="All">All risk</option>
-            {['Low', 'Moderate', 'High', 'Critical'].map((risk) => (
-              <option key={risk} value={risk}>{risk}</option>
-            ))}
-          </select>
-          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-            <option value="All">All status</option>
-            {['Compliant', 'Warning', 'Non-Compliant'].map((status) => (
-              <option key={status} value={status}>{status}</option>
-            ))}
-          </select>
+        <div className="toolbar-row">
+          <div className="filter-row">
+            <select value={vendorFilter} onChange={(event) => setVendorFilter(event.target.value)}>
+              <option value="All">All vendors</option>
+              {vendorOptions.map((vendor) => (
+                <option key={vendor} value={vendor}>{vendor}</option>
+              ))}
+            </select>
+            <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
+              <option value="All">All device types</option>
+              {[...new Set(devices.map((device) => device.deviceType))].map((deviceType) => (
+                <option key={deviceType} value={deviceType}>{deviceType}</option>
+              ))}
+            </select>
+            <select value={riskFilter} onChange={(event) => setRiskFilter(event.target.value)}>
+              <option value="All">All risk</option>
+              {['Low', 'Moderate', 'High', 'Critical'].map((risk) => (
+                <option key={risk} value={risk}>{risk}</option>
+              ))}
+            </select>
+            <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+              <option value="All">All status</option>
+              {['Compliant', 'Warning', 'Non-Compliant'].map((status) => (
+                <option key={status} value={status}>{status}</option>
+              ))}
+            </select>
+          </div>
+          <button type="button" className="primary-button" onClick={() => navigate('/configuration')}>
+            Add Device
+          </button>
         </div>
 
         <div className="table-wrap">
@@ -996,26 +1038,22 @@ function FindingsPage() {
           <table>
             <thead>
               <tr>
-                <th>Finding</th>
+                <th>Finding ID</th>
                 <th>Device</th>
-                <th>Vendor</th>
-                <th>Framework</th>
+                <th>Control</th>
                 <th>Severity</th>
-                <th>Category</th>
                 <th>Status</th>
                 <th>Detected</th>
-                <th>Action</th>
+                <th>Remediation</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((finding) => (
                 <tr key={finding.id} onClick={() => navigate(`/findings/${finding.id}`)} className="clickable-row">
-                  <td>{finding.title}</td>
+                  <td>{finding.id}</td>
                   <td>{finding.device}</td>
-                  <td>{finding.vendor}</td>
-                  <td>{finding.framework}</td>
+                  <td>{finding.controlId}</td>
                   <td><SeverityPill severity={finding.severity} /></td>
-                  <td>{finding.category}</td>
                   <td><StatusBadge status={finding.status} /></td>
                   <td>{new Date(finding.detected).toLocaleDateString()}</td>
                   <td>{finding.action}</td>
