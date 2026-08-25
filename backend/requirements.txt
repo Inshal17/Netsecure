@@ -1,0 +1,13 @@
+fastapi==0.104.1
+uvicorn[standard]>=0.24,<1
+python-multipart>=0.0.6
+# reportlab stays pinned for PDF generation
+reportlab>=4.0
+
+# Optional production dependencies (install in production environment)
+psycopg2-binary>=2.9
+boto3>=1.26
+alembic>=1.12
+
+# Test runner for CI
+pytest>=7.0

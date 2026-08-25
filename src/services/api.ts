@@ -1,51 +1,58 @@
-import {
-  analysisJobs,
-  analysisResults,
-  auditLogs,
-  complianceSnapshot,
-  complianceTrend,
-  devices,
-  findings,
-  frameworkComparison,
-  frameworks,
-  remediationTasks,
-  reports,
-  severityBreakdown,
-  trainingItems,
-  uploadedFiles,
-  vendorCompliance,
-} from './mockData'
+// vendorOptions was used by UI; remove unused import to avoid TS warning
 import type {
   AnalysisJob,
   AnalysisResult,
-  AuditLog,
   Device,
   Finding,
   FrameworkDefinition,
   ReportItem,
-  RemediationTask,
   TrainingItem,
   UploadRecord,
 } from '../types'
 
-export const getDashboardStats = () => ({
-  snapshot: complianceSnapshot,
-  trend: complianceTrend,
-  severityBreakdown,
-  vendorCompliance,
-  frameworkComparison,
-  recentActivity: [
-    { device: 'Core-Edge-01', vendor: 'Cisco', analysis: 'CIS Benchmark', framework: 'CIS Benchmarks', score: 92, status: 'Compliant', date: '2026-08-25' },
-    { device: 'FW-Perimeter-A', vendor: 'Palo Alto', analysis: 'Access Review', framework: 'NIST SP 800-53', score: 78, status: 'Warning', date: '2026-08-25' },
-    { device: 'FortiGate-Edge', vendor: 'Fortinet', analysis: 'ISO Baseline', framework: 'ISO/IEC 27001', score: 71, status: 'Non-Compliant', date: '2026-08-24' },
-    { device: 'MX-Transit', vendor: 'Juniper', analysis: 'STIG Review', framework: 'DISA STIG', score: 57, status: 'Critical', date: '2026-08-24' },
-  ],
-  criticalFindings: findings.slice(0, 3),
-})
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api'
+const runtimeJobs: AnalysisJob[] = []
+const runtimeResults: AnalysisResult[] = []
 
-export const getDevices = (): Device[] => devices
+async function request<T>(path: string): Promise<T> {
+  const response = await fetch(`${API_URL}${path}`)
+  if (!response.ok) throw new Error('The compliance API is unavailable. Start the backend and try again.')
+  return response.json() as Promise<T>
+}
 
-export const getDevice = (id: string): Device | undefined => devices.find((device) => device.id === id)
+export const getLiveDashboard = () => request<{
+  totalDevices: number; configurationsAnalyzed: number; overallScore: number; openFindings: number
+  severityBreakdown: { name: string; value: number }[]
+  recentActivity: { id: string; device: string; vendor: string; framework: string; score: number; status: string; date: string }[]
+  vendorCompliance: { name: string; score: number }[]
+  frameworkComparison: { name: string; score: number }[]
+}>('/dashboard')
+export const getLiveDevices = () => request<Device[]>('/devices')
+export const getLiveFindings = () => request<Finding[]>('/findings')
+export const getLiveReports = () => request<ReportItem[]>('/reports')
+export const getLiveAnalyses = () => request<any[]>('/analyses')
+export const getLiveTrainingMappings = () => request<any[]>('/training-mappings')
+export const reportUrl = (analysisId: string) => `${API_URL}/analyses/${analysisId}/report.pdf`
+// helper: fetch dashboard-shaped stats from backend
+export const getDashboardStats = async () => {
+  const live = await getLiveDashboard()
+  return {
+    snapshot: { totalDevices: live.totalDevices, configurationsAnalyzed: live.configurationsAnalyzed, overallScore: live.overallScore, compliantDevices: 0, nonCompliantDevices: 0, lastAnalysis: live.recentActivity[0]?.date ?? 'No scans yet', criticalFindings: live.severityBreakdown.find((item) => item.name === 'Critical')?.value ?? 0, highRiskFindings: live.severityBreakdown.find((item) => item.name === 'High')?.value ?? 0 },
+    trend: live.recentActivity.map((item: any) => ({ name: item.device, score: item.score })),
+    severityBreakdown: live.severityBreakdown,
+    vendorCompliance: live.vendorCompliance,
+    frameworkComparison: live.frameworkComparison,
+    recentActivity: live.recentActivity,
+    criticalFindings: [],
+  }
+}
+
+export const getDevices = () => getLiveDevices()
+
+export const getDevice = async (id: string) => {
+  const items = await getLiveDevices()
+  return items.find((d) => d.id === id)
+}
 
 export const uploadConfiguration = (fileName: string, vendor?: string): UploadRecord => ({
   id: `file-${Date.now()}`,
@@ -56,74 +63,156 @@ export const uploadConfiguration = (fileName: string, vendor?: string): UploadRe
   status: 'Detected',
 })
 
-export const startAnalysis = (fileName: string, vendor: string, framework: string): { job: AnalysisJob; result: AnalysisResult } => {
+export const startAnalysis = async (file: File, vendor: string, framework: string): Promise<{ job: AnalysisJob; result: AnalysisResult }> => {
+  const form = new FormData()
+  form.append('file', file)
+  form.append('vendor', vendor)
+  form.append('framework', framework)
+  const response = await fetch(`${API_URL}/analyses/upload`, { method: 'POST', body: form })
+  if (!response.ok) {
+    const details = await response.json().catch(() => null)
+    throw new Error(details?.detail ?? 'The compliance API could not analyze this file.')
+  }
+  const analysis = await response.json()
   const job: AnalysisJob = {
-    id: `job-${Date.now()}`,
-    fileName,
-    device: 'New Device',
-    vendor,
-    framework,
+    id: analysis.id,
+    fileName: analysis.fileName,
+    device: analysis.fileName.replace(/\.[^.]+$/, ''),
+    vendor: analysis.vendor,
+    framework: analysis.framework,
     progress: 100,
     status: 'Completed',
-    started: new Date().toISOString(),
-    completed: new Date().toISOString(),
+    started: analysis.createdAt,
+    completed: analysis.createdAt,
   }
 
   const result: AnalysisResult = {
-    id: `result-${Date.now()}`,
+    id: analysis.id,
     jobId: job.id,
-    device: 'New Device',
-    vendor,
-    framework,
-    overallScore: 84,
-    riskLevel: 'Moderate',
-    controlsChecked: 20,
-    passed: 15,
-    failed: 3,
-    warnings: 2,
-    summary: 'The uploaded configuration was normalized and evaluated against the selected framework. Follow-up remediation is recommended for administrative access and logging hardening.',
-    timestamp: new Date().toISOString(),
-    controls: [
-      { id: 'CIS-NET-01', framework: 'CIS', requirement: 'Disable legacy management protocols', result: 'Fail', severity: 'Critical', evidence: 'telnet enabled', remediation: 'Disable Telnet and enforce SSH version 2' },
-      { id: 'CIS-NET-02', framework: 'CIS', requirement: 'Secure administrative access', result: 'Pass', severity: 'High', evidence: 'SSH version 2 configured', remediation: 'Maintain secure access policy' },
-      { id: 'NIST-AU-02', framework: 'NIST', requirement: 'Centralized audit log export', result: 'Warning', severity: 'Medium', evidence: 'logging destination not configured', remediation: 'Configure logging host' },
-    ],
+    device: job.device,
+    vendor: analysis.vendor,
+    framework: analysis.framework,
+    overallScore: analysis.overallScore,
+    riskLevel: analysis.riskLevel,
+    controlsChecked: analysis.controlsChecked,
+    passed: analysis.passed,
+    failed: analysis.failed,
+    warnings: analysis.warnings,
+    summary: analysis.summary,
+    timestamp: analysis.createdAt,
+    controls: analysis.controls,
   }
-
+  runtimeJobs.unshift(job)
+  runtimeResults.unshift(result)
   return { job, result }
 }
 
-export const getAnalysisJobs = (): AnalysisJob[] => analysisJobs
 
-export const getAnalysisResult = (id: string): AnalysisResult | undefined => analysisResults.find((result) => result.jobId === id || result.id === id)
+export const getAnalysisJobs = () => getLiveAnalyses()
 
-export const getFindings = (): Finding[] => findings
+export const getAnalysisResult = (id: string) => request<any>(`/analyses/${id}`)
 
-export const getFinding = (id: string): Finding | undefined => findings.find((finding) => finding.id === id)
+export const getFindings = () => getLiveFindings()
 
-export const getRemediations = (): RemediationTask[] => remediationTasks
+export const getFinding = async (id: string) => {
+  const items = await getLiveFindings()
+  return items.find((f) => f.id === id)
+}
 
-export const getTrainingItems = (): TrainingItem[] => trainingItems
+export const getRemediations = async () => {
+  const findings = await getLiveFindings()
+  // map top findings into remediation tasks
+  return findings.slice(0, 20).map((f: any, idx: number) => ({
+    id: `rem-${idx}-${f.id}`,
+    finding: f.title,
+    device: f.device,
+    severity: f.severity,
+    type: 'Configuration Change',
+    command: f.remediationCommand ?? f.action ?? '',
+    status: 'Pending',
+  }))
+}
 
-export const saveTrainingMapping = (payload: Partial<TrainingItem>): TrainingItem => ({
-  id: `train-${Date.now()}`,
-  command: payload.command ?? 'set management access legacy-protocol enable',
-  vendor: payload.vendor ?? 'Unknown Vendor',
-  mapping: payload.mapping ?? 'legacy_protocol_disabled',
-  framework: payload.framework ?? 'CIS',
-  confidence: payload.confidence ?? 94,
-  createdBy: payload.createdBy ?? 'A. Patel',
-  date: new Date().toISOString().slice(0, 10),
-  category: payload.category ?? 'Management Access',
-  parameter: payload.parameter ?? 'insecure_protocol',
-  meaning: payload.meaning ?? 'Enables a legacy protocol that exposes administrative access to clear-text channels.',
-  expectedSecureValue: payload.expectedSecureValue ?? 'disabled',
-})
+export const getTrainingItems = () => getLiveTrainingMappings()
 
-export const getFrameworks = (): FrameworkDefinition[] => frameworks
+export const saveTrainingMapping = async (payload: Partial<TrainingItem>): Promise<TrainingItem> => {
+  const response = await fetch(`${API_URL}/training-mappings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      raw_command: payload.command ?? 'set management access legacy-protocol enable',
+      vendor: payload.vendor ?? 'Unknown Vendor',
+      field_name: payload.mapping ?? 'telnet_disabled',
+      observed_value: payload.observedValue ?? false,
+      meaning: payload.meaning ?? 'Administrator-provided vendor syntax mapping.',
+      confidence: payload.confidence ?? 92,
+    }),
+  })
+  if (!response.ok) {
+    const details = await response.json().catch(() => null)
+    throw new Error(details?.detail ?? 'The training mapping could not be saved.')
+  }
+  const saved = await response.json()
+  return {
+    id: saved.id,
+    command: saved.raw_command,
+    vendor: saved.vendor,
+    mapping: saved.field_name,
+    framework: payload.framework ?? 'CIS',
+    confidence: saved.confidence,
+    createdBy: payload.createdBy ?? 'Admin',
+    date: saved.created_at.slice(0, 10),
+    category: payload.category ?? 'Management Access',
+    parameter: payload.parameter ?? saved.field_name,
+    meaning: saved.meaning,
+    expectedSecureValue: String(payload.expectedSecureValue ?? ''),
+    observedValue: saved.observed_value,
+  }
+}
 
-export const getReports = (): ReportItem[] => reports
+export const applyTrainingMappings = async () => {
+  const response = await fetch(`${API_URL}/training-mappings/apply`, { method: 'POST' })
+  if (!response.ok) throw new Error('Could not apply training mappings')
+  return response.json()
+}
 
-export const getAuditLogs = (): AuditLog[] => auditLogs
+export const getFrameworks = () => request<FrameworkDefinition[]>('/frameworks')
 
-export const getUploadedFiles = (): UploadRecord[] => uploadedFiles
+export const getReports = () => getLiveReports()
+
+export const getAuditLogs = async () => {
+  // Derive a lightweight audit log view from training mappings and analyses
+  try {
+    const mappings = await getLiveTrainingMappings()
+    const analyses = await getLiveAnalyses()
+    const mapLogs = (mappings || []).map((m: any, idx: number) => ({ id: `log-m-${idx}`, timestamp: m.created_at, user: 'Admin', action: 'AI mapping created', resource: m.raw_command, device: 'Unknown', result: 'Success', ipAddress: '127.0.0.1' }))
+    const analysisLogs = (analyses || []).slice(0, 20).map((a: any, idx: number) => ({ id: `log-a-${idx}`, timestamp: a.createdAt ?? a.created_at ?? new Date().toISOString(), user: 'System', action: 'Analysis completed', resource: a.fileName ?? a.filename ?? a.id, device: a.fileName?.replace(/\.[^.]+$/, '') ?? a.id, result: 'Success', ipAddress: '127.0.0.1' }))
+    return [...analysisLogs, ...mapLogs].sort((x, y) => new Date(y.timestamp).getTime() - new Date(x.timestamp).getTime())
+  } catch (e) {
+    return []
+  }
+}
+
+export const getUploadedFiles = async () => {
+  try {
+    const analyses = await getLiveAnalyses()
+    return (analyses || []).map((a: any) => ({ id: a.id, filename: a.fileName ?? a.filename ?? a.id, size: 'n/a', detectedVendor: a.vendor ?? 'Unknown', deviceType: 'Network device', status: 'Ready', uploadUrl: a.upload_url ?? `/api/analyses/${a.id}/raw` }))
+  } catch (e) {
+    return []
+  }
+}
+
+export const rawUrl = (analysisId: string) => `${API_URL}/analyses/${analysisId}/raw`
+
+export const getStorageInfo = () => request<{ s3_configured: boolean; s3_bucket?: string }>('/storage-info')
+
+export const reRunUploadedAnalysis = async (analysisId: string, framework = 'CIS Benchmarks') => {
+  // download raw content then POST as a file to startAnalysis
+  const rawResponse = await fetch(rawUrl(analysisId))
+  if (!rawResponse.ok) throw new Error('Could not fetch raw uploaded file')
+  const text = await rawResponse.text()
+  const filename = `${analysisId}.cfg`
+  const file = new File([text], filename, { type: 'text/plain' })
+  // vendor is not known reliably here; let backend detect vendor automatically via vendor='Auto'
+  return startAnalysis(file, 'Auto', framework)
+}

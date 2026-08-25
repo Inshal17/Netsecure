@@ -93,7 +93,8 @@
   gap: 20px;
   padding: 16px 24px;
   border-bottom: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(15, 23, 39, 0.96);
+  backdrop-filter: blur(14px);
   position: sticky;
   top: 0;
   z-index: 20;
@@ -290,7 +291,10 @@
 }
 
 .content-area {
-  padding: 24px;
+  padding: clamp(16px, 2.5vw, 32px);
+  max-width: 1800px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .page-stack {
@@ -970,7 +974,7 @@ code,
     flex-wrap: wrap;
   }
 
-  .search-box {
+.search-box {
     min-width: 0;
     width: 100%;
   }
@@ -998,6 +1002,36 @@ code,
   .mobile-only {
     display: grid;
   }
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+table {
+  min-width: 760px;
+}
+
+th {
+  white-space: nowrap;
+}
+
+td {
+  vertical-align: top;
+}
+
+.empty-state,
+.empty-cell {
+  color: var(--muted);
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.dashboard-callout p {
+  color: var(--muted);
+  max-width: 42ch;
 }
 
 .severity-pill {
@@ -1288,6 +1322,29 @@ small {
 .report-section { margin-top: 12px; }
 
 .report-section h4 { margin: 0 0 8px; color: #dfeaf8; }
+
+/* Modal styles for confirmations */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2,6,23,0.6);
+  display: grid;
+  place-items: center;
+  z-index: 60;
+}
+.modal {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 18px;
+  border-radius: 10px;
+  width: min(720px, 92%);
+  box-shadow: 0 10px 30px rgba(2,6,23,0.6);
+}
+.modal h3 { margin-top: 0; }
+
+/* Report preview improvements */
+.report-preview { background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); padding: 18px; }
+.report-section h4 { margin-bottom: 6px; }
 
 .setting-row {
   display: flex;

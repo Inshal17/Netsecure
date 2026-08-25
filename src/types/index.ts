@@ -102,6 +102,7 @@ export interface TrainingItem {
   parameter: string
   meaning: string
   expectedSecureValue: string
+  observedValue?: boolean
 }
 
 export interface FrameworkDefinition {

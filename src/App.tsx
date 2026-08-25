@@ -1,20 +1,17 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import './App.css'
 import {
   Activity,
   AlertTriangle,
+  Copy,
   ArrowRight,
   Bell,
   ChevronRight,
-  FileText,
-  Gauge,
   HardDrive,
-  ListFilter,
   Menu,
   Network,
   Search,
-  Settings,
   ShieldCheck,
-  Sparkles,
   UploadCloud,
   UserCircle,
   X,
@@ -44,25 +41,30 @@ import {
   useOutletContext,
   useParams,
 } from 'react-router-dom'
+
 import {
   getAnalysisJobs,
   getAnalysisResult,
   getAuditLogs,
-  getDashboardStats,
-  getDevice,
-  getDevices,
-  getFinding,
-  getFindings,
   getFrameworks,
+  getLiveDashboard,
+  getLiveDevices,
+  getLiveFindings,
+  getLiveAnalyses,
+  getLiveReports,
+  getUploadedFiles,
   getRemediations,
-  getReports,
+  reportUrl,
   getTrainingItems,
   saveTrainingMapping,
+  applyTrainingMappings,
   startAnalysis,
+  getStorageInfo,
+  reRunUploadedAnalysis,
 } from './services/api'
-import { frameworkOptions, vendorOptions } from './services/mockData'
-import type { FrameworkDefinition, TrainingItem } from './types'
-import './App.css'
+
+// vendorOptions removed; use live devices to derive vendor list
+import type { Device, Finding, FrameworkDefinition, ReportItem, TrainingItem } from './types'
 
 type Toast = {
   id: number
@@ -74,25 +76,6 @@ type LayoutContext = {
   showToast: (message: string, variant?: 'success' | 'warning' | 'info') => void
   searchTerm: string
   setSearchTerm: (term: string) => void
-}
-
-const navItems = [
-  { to: '/', label: 'Overview', icon: Gauge },
-  { to: '/devices', label: 'Devices', icon: HardDrive },
-  { to: '/configuration', label: 'Configurations', icon: UploadCloud },
-  { to: '/analysis', label: 'Analysis', icon: Activity },
-  { to: '/compliance', label: 'Compliance', icon: ShieldCheck },
-  { to: '/findings', label: 'Findings', icon: AlertTriangle },
-  { to: '/remediation', label: 'Remediation', icon: WrenchIcon },
-  { to: '/training', label: 'Training', icon: Sparkles },
-  { to: '/frameworks', label: 'Frameworks', icon: Network },
-  { to: '/reports', label: 'Reports', icon: FileText },
-  { to: '/audit-logs', label: 'Audit Logs', icon: ListFilter },
-  { to: '/settings', label: 'Settings', icon: Settings },
-]
-
-function WrenchIcon(props: React.ComponentProps<typeof Settings>) {
-  return <Settings {...props} />
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -205,8 +188,24 @@ function Layout() {
     '/settings': 'Tune governance controls, alerts, and platform behavior.',
   }
 
-  const currentTitle = pageTitleMap[location.pathname] ?? 'NetSecureAI'
-  const currentDescription = pageDescriptionMap[location.pathname] ?? 'Network security operations overview.'
+  const matchedPath = Object.keys(pageTitleMap).find((path) => path !== '/' && location.pathname.startsWith(`${path}/`))
+  const currentTitle = pageTitleMap[location.pathname] ?? (matchedPath ? pageTitleMap[matchedPath] : 'NetSecureAI')
+  const currentDescription = pageDescriptionMap[location.pathname] ?? (matchedPath ? pageDescriptionMap[matchedPath] : 'Network security operations overview.')
+
+  const navItems: { to: string; label: string; icon: LucideIcon }[] = [
+    { to: '/', label: 'Dashboard', icon: Activity },
+    { to: '/devices', label: 'Devices', icon: HardDrive },
+    { to: '/configuration', label: 'Configuration', icon: UploadCloud },
+    { to: '/analysis', label: 'Analysis', icon: Network },
+    { to: '/compliance', label: 'Compliance', icon: ShieldCheck },
+    { to: '/findings', label: 'Findings', icon: AlertTriangle },
+    { to: '/remediation', label: 'Remediation', icon: ArrowRight },
+    { to: '/training', label: 'Training', icon: UserCircle },
+    { to: '/frameworks', label: 'Frameworks', icon: ShieldCheck },
+    { to: '/reports', label: 'Reports', icon: Activity },
+    { to: '/audit-logs', label: 'Audit Logs', icon: Bell },
+    { to: '/settings', label: 'Settings', icon: X },
+  ]
 
   return (
     <div className="app-shell">
@@ -285,8 +284,26 @@ function Layout() {
 }
 
 function DashboardPage() {
-  const dashboard = getDashboardStats()
+  const [dashboard, setDashboard] = useState<any | null>(null)
+  const [loadError, setLoadError] = useState('')
   const navigate = useNavigate()
+
+  useEffect(() => {
+    Promise.all([getLiveDashboard(), getLiveFindings()])
+      .then(([live, liveFindings]) => setDashboard({
+        snapshot: { totalDevices: live.totalDevices, configurationsAnalyzed: live.configurationsAnalyzed, overallScore: live.overallScore, compliantDevices: live.recentActivity.filter((item) => item.status === 'Compliant').length, nonCompliantDevices: live.recentActivity.filter((item) => item.status !== 'Compliant').length, lastAnalysis: live.recentActivity[0]?.date ?? 'No scans yet', criticalFindings: live.severityBreakdown.find((item) => item.name === 'Critical')?.value ?? 0, highRiskFindings: live.severityBreakdown.find((item) => item.name === 'High')?.value ?? 0 },
+        trend: live.recentActivity.map((item) => ({ name: item.device, score: item.score })),
+        severityBreakdown: live.severityBreakdown,
+        vendorCompliance: live.vendorCompliance,
+        frameworkComparison: live.frameworkComparison,
+        recentActivity: live.recentActivity.map((item) => ({ ...item, analysis: item.framework })),
+        criticalFindings: liveFindings.filter((item) => item.severity === 'Critical' || item.severity === 'High').slice(0, 3),
+      }))
+      .catch((error) => setLoadError(error.message))
+  }, [])
+
+  if (loadError) return <div className="empty-state">{loadError}</div>
+  if (!dashboard) return <div className="empty-state">Loading persisted scan data…</div>
 
   return (
     <div className="page-stack">
@@ -306,35 +323,27 @@ function DashboardPage() {
       </div>
 
       <div className="stats-grid primary-stats">
-        <StatCard label="Total Devices" value={String(dashboard.snapshot.totalDevices)} trend="Across all vendors" icon={HardDrive} accent="purple" />
-        <StatCard label="Configurations Analyzed" value={String(dashboard.snapshot.configurationsAnalyzed)} trend="This reporting period" icon={Network} accent="cyan" />
-        <StatCard label="Overall Compliance" value={`${dashboard.snapshot.overallScore}%`} trend="↑ 4.2% from previous analysis" icon={ShieldCheck} accent="green" />
-        <StatCard label="Open Findings" value={String(dashboard.snapshot.criticalFindings + dashboard.snapshot.highRiskFindings)} trend="Priority action required" icon={AlertTriangle} accent="red" />
+        <StatCard label="Devices scanned" value={String(dashboard.snapshot.totalDevices)} trend="Unique devices from persisted scans" icon={HardDrive} accent="purple" />
+        <StatCard label="Configurations analyzed" value={String(dashboard.snapshot.configurationsAnalyzed)} trend="Persisted scan history" icon={Network} accent="cyan" />
+        <StatCard label="Current compliance" value={`${dashboard.snapshot.overallScore}%`} trend="Latest scan for each device" icon={ShieldCheck} accent="green" />
+        <StatCard label="Open findings" value={String(dashboard.snapshot.criticalFindings + dashboard.snapshot.highRiskFindings)} trend="Critical and high severity" icon={AlertTriangle} accent="red" />
       </div>
 
       <div className="insight-row">
         <div className="panel compact-panel">
           <div className="insight-label">Risk Distribution</div>
           <div className="risk-list">
-            <div><span className="dot red" /> Critical <strong>2</strong></div>
-            <div><span className="dot orange" /> High <strong>5</strong></div>
-            <div><span className="dot amber" /> Medium <strong>4</strong></div>
-            <div><span className="dot blue" /> Low <strong>2</strong></div>
+            {dashboard.severityBreakdown.map((item: any) => <div key={item.name}><span className={`dot ${item.name === 'Critical' ? 'red' : item.name === 'High' ? 'orange' : item.name === 'Medium' ? 'amber' : 'blue'}`} /> {item.name} <strong>{item.value}</strong></div>)}
           </div>
         </div>
 
         <div className="panel compact-panel">
           <div className="insight-label">Framework Coverage</div>
           <div className="coverage-stack">
-            {[
-              { label: 'CIS', value: 91 },
-              { label: 'NIST', value: 84 },
-              { label: 'STIG', value: 88 },
-              { label: 'ISO', value: 79 },
-            ].map((item) => (
-              <div key={item.label} className="coverage-item">
-                <div className="coverage-head"><span>{item.label}</span><strong>{item.value}%</strong></div>
-                <div className="progress-track"><span style={{ width: `${item.value}%` }} /></div>
+            {dashboard.frameworkComparison.map((item: any) => (
+              <div key={item.name} className="coverage-item">
+                <div className="coverage-head"><span>{item.name}</span><strong>{item.score}%</strong></div>
+                <div className="progress-track"><span style={{ width: `${item.score}%` }} /></div>
               </div>
             ))}
           </div>
@@ -343,7 +352,7 @@ function DashboardPage() {
 
       <div className="dashboard-grid">
         <div className="panel chart-panel">
-          <SectionHeader title="Compliance Trend" />
+          <SectionHeader title="Recent Scan Scores" />
           <div className="chart-box">
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={dashboard.trend}>
@@ -373,7 +382,7 @@ function DashboardPage() {
                 <YAxis stroke="#64748b" />
                 <Tooltip />
                 <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                  {dashboard.severityBreakdown.map((entry) => (
+                  {dashboard.severityBreakdown.map((entry: any) => (
                     <Cell key={entry.name} fill={entry.name === 'Critical' ? '#dc2626' : entry.name === 'High' ? '#f97316' : entry.name === 'Medium' ? '#d97706' : '#2563eb'} />
                   ))}
                 </Bar>
@@ -403,7 +412,7 @@ function DashboardPage() {
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie data={dashboard.frameworkComparison} dataKey="score" nameKey="name" innerRadius={42} outerRadius={76} paddingAngle={3}>
-                  {dashboard.frameworkComparison.map((entry, index) => (
+                  {dashboard.frameworkComparison.map((entry: any, index: number) => (
                     <Cell key={entry.name} fill={['#60a5fa', '#93c5fd', '#d1d5db', '#cbd5e1'][index % 4]} />
                   ))}
                 </Pie>
@@ -430,16 +439,16 @@ function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {dashboard.recentActivity.map((row) => (
-                  <tr key={`${row.device}-${row.date}`}>
-                    <td>{row.device}</td>
-                    <td>{row.vendor}</td>
-                    <td>{row.analysis}</td>
-                    <td>{row.date}</td>
-                    <td>{row.score}%</td>
-                    <td><StatusBadge status={row.status} /></td>
-                  </tr>
-                ))}
+                    {dashboard.recentActivity.map((row: any) => (
+                      <tr key={`${row.device}-${row.date}`}>
+                        <td>{row.device}</td>
+                        <td>{row.vendor}</td>
+                        <td>{row.analysis}</td>
+                        <td>{row.date}</td>
+                        <td>{row.score}%</td>
+                        <td><StatusBadge status={row.status} /></td>
+                      </tr>
+                    ))}
               </tbody>
             </table>
           </div>
@@ -448,7 +457,7 @@ function DashboardPage() {
         <div className="panel">
           <SectionHeader title="Critical Findings" />
           <div className="findings-stack">
-            {dashboard.criticalFindings.map((finding) => (
+            {dashboard.criticalFindings.map((finding: any) => (
               <button type="button" key={finding.id} className="finding-card" onClick={() => navigate(`/findings/${finding.id}`)}>
                 <div className="finding-card-head">
                   <div>
@@ -471,13 +480,18 @@ function DashboardPage() {
 }
 
 function DevicesPage() {
-  const devices = getDevices()
+  const [devices, setDevices] = useState<Device[]>([])
+  const [loadError, setLoadError] = useState('')
   const { searchTerm } = useOutletContext<LayoutContext>()
   const [vendorFilter, setVendorFilter] = useState('All')
   const [typeFilter, setTypeFilter] = useState('All')
   const [riskFilter, setRiskFilter] = useState('All')
   const [statusFilter, setStatusFilter] = useState('All')
   const navigate = useNavigate()
+
+  useEffect(() => { getLiveDevices().then(setDevices).catch((error) => setLoadError(error.message)) }, [])
+
+  const vendors = useMemo(() => Array.from(new Set(devices.map((d) => d.vendor).filter(Boolean))), [devices])
 
   const filtered = useMemo(() => {
     return devices.filter((device) => {
@@ -492,12 +506,13 @@ function DevicesPage() {
 
   return (
     <div className="page-stack">
+      {loadError ? <div className="empty-state">{loadError}</div> : null}
       <div className="panel">
         <div className="toolbar-row">
           <div className="filter-row">
             <select value={vendorFilter} onChange={(event) => setVendorFilter(event.target.value)}>
               <option value="All">All vendors</option>
-              {vendorOptions.map((vendor) => (
+              {vendors.map((vendor) => (
                 <option key={vendor} value={vendor}>{vendor}</option>
               ))}
             </select>
@@ -542,7 +557,7 @@ function DevicesPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((device) => (
+              {filtered.length ? filtered.map((device) => (
                 <tr key={device.id} onClick={() => navigate(`/devices/${device.id}`)} className="clickable-row">
                   <td>{device.name}</td>
                   <td>{device.vendor}</td>
@@ -555,7 +570,7 @@ function DevicesPage() {
                   <td>{new Date(device.lastScan).toLocaleDateString()}</td>
                   <td><StatusBadge status={device.status} /></td>
                 </tr>
-              ))}
+              )) : <tr><td colSpan={10} className="empty-cell">No scanned devices yet. Upload a configuration to create the first device record.</td></tr>}
             </tbody>
           </table>
         </div>
@@ -567,9 +582,13 @@ function DevicesPage() {
 function DeviceDetailsPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const device = getDevice(id ?? '')
+  const [device, setDevice] = useState<Device | null>(null)
+  const [loaded, setLoaded] = useState(false)
   const [activeTab, setActiveTab] = useState<'Overview' | 'Configuration' | 'Compliance' | 'Findings' | 'Remediation' | 'Audit History'>('Overview')
 
+  useEffect(() => { getLiveDevices().then((items) => setDevice(items.find((item) => item.id === id) ?? null)).finally(() => setLoaded(true)) }, [id])
+
+  if (!loaded) return <div className="empty-state">Loading scanned device…</div>
   if (!device) {
     return <div className="empty-state">Device not found.</div>
   }
@@ -639,63 +658,33 @@ function DeviceDetailsPage() {
 
         {activeTab === 'Configuration' && (
           <div className="tab-content">
-            <pre className="code-block">hostname {device.name}
-service tcp-keepalives-in
-logging host 10.10.50.20
-ip access-list extended mgmt-acl
- permit tcp any host {device.ipAddress} eq 22
- deny ip any any
-!</pre>
+            <p>Raw configurations are redacted at ingestion and are not displayed in the dashboard. Open the scan result for verified evidence.</p>
+            <button type="button" className="secondary-button" onClick={() => navigate(`/analysis/${device.id}`)}>Open scan evidence</button>
           </div>
         )}
 
         {activeTab === 'Compliance' && (
           <div className="tab-content">
-            <table>
-              <thead>
-                <tr>
-                  <th>Control ID</th>
-                  <th>Description</th>
-                  <th>Status</th>
-                  <th>Severity</th>
-                  <th>Evidence</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>CIS-NET-01</td>
-                  <td>Disable legacy management protocols</td>
-                  <td><StatusBadge status="Non-Compliant" /></td>
-                  <td><SeverityPill severity="Critical" /></td>
-                  <td>telnet enabled</td>
-                </tr>
-                <tr>
-                  <td>CIS-NET-02</td>
-                  <td>Configure secure shell management</td>
-                  <td><StatusBadge status="Compliant" /></td>
-                  <td><SeverityPill severity="High" /></td>
-                  <td>SSH version 2 configured</td>
-                </tr>
-              </tbody>
-            </table>
+            <p>Compliance evidence is generated per scan, not from a placeholder device record.</p>
+            <button type="button" className="secondary-button" onClick={() => navigate(`/analysis/${device.id}`)}>View current compliance result</button>
           </div>
         )}
 
         {activeTab === 'Findings' && (
           <div className="tab-content">
-            <p>1 active finding: Telnet enabled on management interface.</p>
+            <button type="button" className="secondary-button" onClick={() => navigate('/findings')}>View scan-derived findings</button>
           </div>
         )}
 
         {activeTab === 'Remediation' && (
           <div className="tab-content">
-            <p>Recommended action: enforce SSH and remove Telnet service from management plane.</p>
+            <button type="button" className="secondary-button" onClick={() => navigate(`/analysis/${device.id}`)}>View remediation evidence</button>
           </div>
         )}
 
         {activeTab === 'Audit History' && (
           <div className="tab-content">
-            <p>Last audit: 2026-08-25 08:12 UTC by A. Patel.</p>
+            <p>Last persisted scan: {new Date(device.lastScan).toLocaleString()}.</p>
           </div>
         )}
       </div>
@@ -707,8 +696,14 @@ function ConfigurationPage() {
   const navigate = useNavigate()
   const { showToast } = useOutletContext<LayoutContext>()
   const [files, setFiles] = useState<File[]>([])
+  const [uploadedFiles, setUploadedFiles] = useState<any[]>([])
+  const [rerunTarget, setRerunTarget] = useState<any | null>(null)
+  const [rerunInProgress, setRerunInProgress] = useState(false)
+  const [storageInfo, setStorageInfo] = useState<{ s3_configured: boolean; s3_bucket?: string } | null>(null)
   const [framework, setFramework] = useState('CIS Benchmarks')
-  const [vendor, setVendor] = useState('Cisco')
+  const [frameworkOptions, setFrameworkOptions] = useState<string[]>(['CIS Benchmarks', 'NIST SP 800-53', 'DISA STIG', 'ISO/IEC 27001'])
+  const [vendorOptionsState, setVendorOptions] = useState<string[]>(['Cisco'])
+  const [vendor, setVendor] = useState(vendorOptionsState[0] ?? 'Cisco')
   const [analysisDepth, setAnalysisDepth] = useState('Standard')
 
   const handleFileUpload = (incomingFiles: FileList | File[]) => {
@@ -717,17 +712,36 @@ function ConfigurationPage() {
     showToast(`${nextFiles.length} file(s) loaded for analysis`, 'info')
   }
 
-  const handleStartAnalysis = () => {
+  const handleStartAnalysis = async () => {
     if (!files.length) {
       showToast('Upload at least one configuration file before starting analysis', 'warning')
       return
     }
 
     const file = files[0]
-    const { job, result } = startAnalysis(file.name, vendor, framework)
-    showToast(`Analysis started for ${file.name}`, 'success')
-    navigate(`/analysis/${job.id || result.id}`)
+    try {
+      const { job, result } = await startAnalysis(file, vendor, framework)
+      showToast(`Analysis complete for ${file.name}`, 'success')
+      navigate(`/analysis/${job.id || result.id}`)
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Analysis could not be completed.', 'warning')
+    }
   }
+
+  useEffect(() => {
+    getFrameworks().then((items) => setFrameworkOptions(items.map((f: any) => f.name))).catch(() => {})
+    // derive vendor options from persisted devices
+    getLiveDevices().then((items) => {
+      const vendors = Array.from(new Set((items || []).map((d: any) => d.vendor).filter(Boolean)))
+      if (vendors.length) {
+        setVendorOptions((prev) => Array.from(new Set([...prev, ...vendors])))
+        setVendor(vendors[0])
+      }
+    }).catch(() => {})
+    // load previously uploaded files and storage info
+    getUploadedFiles().then((items) => setUploadedFiles(items)).catch(() => {})
+    getStorageInfo().then((info) => setStorageInfo(info)).catch(() => setStorageInfo({ s3_configured: false }))
+  }, [])
 
   return (
     <div className="page-stack">
@@ -754,7 +768,7 @@ function ConfigurationPage() {
           <label>
             <span>Select vendor manually</span>
             <select value={vendor} onChange={(event) => setVendor(event.target.value)}>
-              {vendorOptions.map((option) => (
+              {vendorOptionsState.map((option) => (
                 <option key={option} value={option}>{option}</option>
               ))}
             </select>
@@ -778,7 +792,7 @@ function ConfigurationPage() {
       </div>
 
       <div className="panel">
-        <SectionHeader title="Uploaded Files" />
+        <SectionHeader title="Uploaded Files" actions={<div style={{ fontSize: 12 }}>{storageInfo?.s3_configured ? `Stored: S3 (${storageInfo.s3_bucket})` : 'Stored: Local'}</div>} />
         <div className="table-wrap">
           <table>
             <thead>
@@ -791,30 +805,76 @@ function ConfigurationPage() {
               </tr>
             </thead>
             <tbody>
-              {files.length ? files.map((file) => (
-                <tr key={file.name}>
-                  <td>{file.name}</td>
-                  <td>{(file.size / 1024).toFixed(0)} KB</td>
-                  <td>{vendor}</td>
-                  <td>Router</td>
-                  <td><StatusBadge status="Detected" /></td>
+              {uploadedFiles.length ? uploadedFiles.map((file) => (
+                <tr key={file.id}>
+                  <td>
+                    <span className="small-badge" style={{ marginRight: 8 }}>{storageInfo?.s3_configured ? 'S3' : 'Local'}</span>
+                    {file.filename}
+                  </td>
+                  <td>{file.size ?? 'n/a'}</td>
+                  <td>{file.detectedVendor}</td>
+                  <td>{file.deviceType}</td>
+                  <td>
+                    <div className="action-inline">
+                      <a className="ghost-button small" href={file.uploadUrl} target="_blank" rel="noopener noreferrer">Download</a>
+                      <button type="button" className="secondary-button small" onClick={() => setRerunTarget(file)}>Re-run</button>
+                    </div>
+                  </td>
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={5} className="empty-cell">No files uploaded yet.</td>
+                  <td colSpan={5} className="empty-cell">No uploaded files yet.</td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
+      {rerunTarget ? (
+        <div className="modal-backdrop" role="dialog" aria-modal="true">
+          <div className="modal">
+            <h3>Re-run analysis</h3>
+            <p>Re-run analysis for <strong>{rerunTarget.filename}</strong>? This will re-process the uploaded configuration.</p>
+            <div className="action-row" style={{ justifyContent: 'flex-end' }}>
+              <button type="button" className="ghost-button" onClick={() => setRerunTarget(null)} disabled={rerunInProgress}>Cancel</button>
+              <button type="button" className="primary-button" onClick={async () => {
+                setRerunInProgress(true)
+                showToast('Re-running analysis…', 'info')
+                try {
+                  const { job } = await reRunUploadedAnalysis(rerunTarget.id)
+                  showToast('Analysis re-run completed', 'success')
+                  navigate(`/analysis/${job.id || job}`)
+                } catch (err) {
+                  showToast(err instanceof Error ? err.message : 'Re-run failed', 'warning')
+                } finally {
+                  setRerunInProgress(false)
+                  setRerunTarget(null)
+                }
+              }}>
+                {rerunInProgress ? 'Running…' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
 
 function AnalysisPage() {
-  const jobs = getAnalysisJobs()
+  const [jobs, setJobs] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    setLoading(true)
+    getAnalysisJobs()
+      .then((items) => setJobs(items ?? []))
+      .catch(() => setJobs([]))
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) return <div className="empty-state">Loading analysis jobs…</div>
 
   return (
     <div className="page-stack">
@@ -852,17 +912,17 @@ function AnalysisPage() {
                 <tr key={job.id} onClick={() => navigate(`/analysis/${job.id}`)} className="clickable-row">
                   <td>{job.id}</td>
                   <td>{job.fileName}</td>
-                  <td>{job.device}</td>
+                  <td>{job.device?.name ?? job.device}</td>
                   <td>{job.vendor}</td>
                   <td>{job.framework}</td>
                   <td>
                     <div className="progress-bar">
-                      <span style={{ width: `${job.progress}%` }} />
+                      <span style={{ width: `${job.progress ?? 100}%` }} />
                     </div>
-                    {job.progress}%
+                    {job.progress ?? 100}%
                   </td>
-                  <td><StatusBadge status={job.status} /></td>
-                  <td>{new Date(job.started).toLocaleDateString()}</td>
+                  <td><StatusBadge status={job.status ?? 'Completed'} /></td>
+                  <td>{job.started ? new Date(job.started).toLocaleDateString() : '—'}</td>
                   <td>{job.completed ? new Date(job.completed).toLocaleDateString() : '—'}</td>
                 </tr>
               ))}
@@ -876,10 +936,29 @@ function AnalysisPage() {
 
 function AnalysisDetailsPage() {
   const { id } = useParams()
-  const result = getAnalysisResult(id ?? '')
-  if (!result) {
-    return <div className="empty-state">Analysis result not found.</div>
-  }
+  const [result, setResult] = useState<any | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!id) return
+    setLoading(true)
+    // Try direct API fetch first
+    getAnalysisResult(id)
+      .then((res) => {
+        setResult(res)
+      })
+      .catch(() => {
+        // Fallback: search list endpoint
+        getLiveAnalyses().then((items) => {
+          const analysis = (items || []).find((item: any) => item.id === id)
+          if (analysis) setResult(analysis)
+        }).catch(() => undefined)
+      })
+      .finally(() => setLoading(false))
+  }, [id])
+
+  if (loading) return <div className="empty-state">Loading persisted analysis result…</div>
+  if (!result) return <div className="empty-state">Analysis result not found.</div>
 
   return (
     <div className="page-stack">
@@ -910,7 +989,7 @@ function AnalysisDetailsPage() {
               </tr>
             </thead>
             <tbody>
-              {result.controls.map((control) => (
+              {result.controls.map((control: any) => (
                 <tr key={control.id}>
                   <td>{control.id}</td>
                   <td>{control.framework}</td>
@@ -918,64 +997,8 @@ function AnalysisDetailsPage() {
                   <td><StatusBadge status={control.result} /></td>
                   <td><SeverityPill severity={control.severity} /></td>
                   <td>{control.evidence}</td>
-                  <td>{control.remediation}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function CompliancePage() {
-  const panelData = [
-    { label: 'Overall compliance', value: '81%', detail: 'Across 6 production devices' },
-    { label: 'Controls validated', value: '1,432', detail: 'Monthly evaluation cycle' },
-    { label: 'Policy drift', value: '12%', detail: 'Detected from baseline' },
-  ]
-
-  return (
-    <div className="page-stack">
-      <div className="stats-grid triple">
-        {panelData.map((item) => (
-          <div key={item.label} className="panel stat-box">
-            <p>{item.label}</p>
-            <h3>{item.value}</h3>
-            <small>{item.detail}</small>
-          </div>
-        ))}
-      </div>
-
-      <div className="panel">
-        <SectionHeader title="Framework Alignment" />
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Framework</th>
-                <th>Controls</th>
-                <th>Passed</th>
-                <th>Failed</th>
-                <th>Coverage</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { name: 'CIS Benchmarks', controls: 128, passed: 111, failed: 17, coverage: '92%', status: 'Compliant' },
-                { name: 'NIST SP 800-53', controls: 254, passed: 192, failed: 62, coverage: '76%', status: 'Warning' },
-                { name: 'DISA STIG', controls: 315, passed: 208, failed: 107, coverage: '66%', status: 'Non-Compliant' },
-                { name: 'ISO/IEC 27001', controls: 159, passed: 121, failed: 38, coverage: '76%', status: 'Warning' },
-              ].map((row) => (
-                <tr key={row.name}>
-                  <td>{row.name}</td>
-                  <td>{row.controls}</td>
-                  <td>{row.passed}</td>
-                  <td>{row.failed}</td>
-                  <td>{row.coverage}</td>
-                  <td><StatusBadge status={row.status} /></td>
+                  <td>{control.remediation ?? '-'}</td>
+                  <td><StatusBadge status={control.result ?? 'Completed'} /></td>
                 </tr>
               ))}
             </tbody>
@@ -987,11 +1010,14 @@ function CompliancePage() {
 }
 
 function FindingsPage() {
-  const findings = getFindings()
+  const [findings, setFindings] = useState<Finding[]>([])
+  const [loadError, setLoadError] = useState('')
   const { searchTerm } = useOutletContext<LayoutContext>()
   const [severityFilter, setSeverityFilter] = useState('All')
   const [statusFilter, setStatusFilter] = useState('All')
   const navigate = useNavigate()
+
+  useEffect(() => { getLiveFindings().then(setFindings).catch((error) => setLoadError(error.message)) }, [])
 
   const filtered = findings.filter((finding) => {
     const matchesSearch = `${finding.title} ${finding.device} ${finding.vendor}`.toLowerCase().includes(searchTerm.toLowerCase())
@@ -1009,6 +1035,7 @@ function FindingsPage() {
 
   return (
     <div className="page-stack">
+      {loadError ? <div className="empty-state">{loadError}</div> : null}
       <div className="summary-cards">
         {Object.entries(counts).map(([label, value]) => (
           <div key={label} className="panel simple-card">
@@ -1048,7 +1075,7 @@ function FindingsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((finding) => (
+              {filtered.length ? filtered.map((finding) => (
                 <tr key={finding.id} onClick={() => navigate(`/findings/${finding.id}`)} className="clickable-row">
                   <td>{finding.id}</td>
                   <td>{finding.device}</td>
@@ -1058,7 +1085,7 @@ function FindingsPage() {
                   <td>{new Date(finding.detected).toLocaleDateString()}</td>
                   <td>{finding.action}</td>
                 </tr>
-              ))}
+              )) : <tr><td colSpan={7} className="empty-cell">No active findings from saved scans.</td></tr>}
             </tbody>
           </table>
         </div>
@@ -1069,8 +1096,10 @@ function FindingsPage() {
 
 function FindingDetailsPage() {
   const { id } = useParams()
-  const finding = getFinding(id ?? '')
+  const [finding, setFinding] = useState<Finding | null>(null)
   const { showToast } = useOutletContext<LayoutContext>()
+
+  useEffect(() => { getLiveFindings().then((items) => setFinding(items.find((item) => item.id === id) ?? null)).catch(() => setFinding(null)) }, [id])
 
   if (!finding) {
     return <div className="empty-state">Finding not found.</div>
@@ -1123,8 +1152,12 @@ function FindingDetailsPage() {
 }
 
 function RemediationPage() {
-  const tasks = getRemediations()
-  const [selected, setSelected] = useState(tasks[0])
+  const [tasks, setTasks] = useState<any[]>([])
+  const [selected, setSelected] = useState<any | null>(null)
+
+  useEffect(() => {
+    getRemediations().then((res) => { setTasks(res as any[]); setSelected((res as any[])[0] ?? null) }).catch(() => {})
+  }, [])
 
   return (
     <div className="page-stack">
@@ -1142,13 +1175,18 @@ function RemediationPage() {
               </tr>
             </thead>
             <tbody>
-              {tasks.map((task) => (
-                <tr key={task.id} onClick={() => setSelected(task)} className={selected.id === task.id ? 'selected-row clickable-row' : 'clickable-row'}>
+              {tasks.map((task: any) => (
+                <tr key={task.id} onClick={() => setSelected(task)} className={selected?.id === task.id ? 'selected-row clickable-row' : 'clickable-row'}>
                   <td>{task.finding}</td>
                   <td>{task.device}</td>
                   <td><SeverityPill severity={task.severity} /></td>
                   <td>{task.type}</td>
-                  <td className="mono-cell">{task.command}</td>
+                  <td className="mono-cell" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <code style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{task.command}</code>
+                    <button type="button" className="icon-button small" title="Copy command" onClick={(e) => { e.stopPropagation(); navigator.clipboard?.writeText(task.command); }}>
+                      <Copy size={14} />
+                    </button>
+                  </td>
                   <td><StatusBadge status={task.status} /></td>
                 </tr>
               ))}
@@ -1160,19 +1198,15 @@ function RemediationPage() {
       <div className="panel remediation-detail">
         <h3>Remediation Detail</h3>
         <div className="detail-grid">
-          <div><span>Finding</span><strong>{selected.finding}</strong></div>
-          <div><span>Device</span><strong>{selected.device}</strong></div>
-          <div><span>Severity</span><strong><SeverityPill severity={selected.severity} /></strong></div>
-          <div><span>Status</span><strong>{selected.status}</strong></div>
+          <div><span>Finding</span><strong>{selected?.finding ?? '-'}</strong></div>
+          <div><span>Device</span><strong>{selected?.device ?? '-'}</strong></div>
+          <div><span>Severity</span><strong><SeverityPill severity={selected?.severity ?? 'Low'} /></strong></div>
+          <div><span>Status</span><strong>{selected?.status ?? '-'}</strong></div>
         </div>
         <div className="code-block-wrap">
-          <p>Cisco remediation example (mock only):</p>
-          <code>{selected.command}</code>
-          <p>Fortinet example (mock only):</p>
-          <code>config system global
-set admin-sport 443
-end</code>
-          <small>These are demonstration commands only and will be validated by a backend vendor-specific parser in production.</small>
+          <p>Vendor remediation example (from selected task):</p>
+          <code>{selected?.command ?? 'No remediation command available'}</code>
+          <small>Commands are vendor-specific; always validate syntax before applying.</small>
         </div>
       </div>
     </div>
@@ -1180,34 +1214,50 @@ end</code>
 }
 
 function TrainingPage() {
-  const initialTraining = getTrainingItems()
-  const [items, setItems] = useState<TrainingItem[]>(initialTraining)
+  const [items, setItems] = useState<TrainingItem[]>([])
   const { showToast } = useOutletContext<LayoutContext>()
+
+  useEffect(() => { getTrainingItems().then((res) => setItems(res as TrainingItem[])).catch(() => {}) }, [])
   const [form, setForm] = useState({
+    command: 'set management access legacy-protocol enable',
+    vendor: 'Unknown Vendor',
     category: 'Management Access',
-    parameter: 'insecure_protocol',
+    parameter: 'telnet_disabled',
     meaning: 'Legacy remote management protocol remains enabled on the device.',
     framework: 'CIS',
     control: 'CIS-NET-01',
     expectedSecureValue: 'disabled',
+    observedValue: 'false',
     confidence: '91',
   })
 
-  const handleSave = () => {
-    const created = saveTrainingMapping({
-      command: 'set management access legacy-protocol enable',
-      vendor: 'Unknown Vendor',
-      mapping: 'legacy_protocol_disabled',
-      framework: form.framework,
-      confidence: Number(form.confidence),
-      createdBy: 'A. Patel',
-      category: form.category,
-      parameter: form.parameter,
-      meaning: form.meaning,
-      expectedSecureValue: form.expectedSecureValue,
-    })
-    setItems((current) => [created, ...current])
-    showToast('Mapping saved to training model', 'success')
+  const handleSave = async () => {
+    try {
+      const created = await saveTrainingMapping({
+        command: form.command,
+        vendor: form.vendor,
+        mapping: form.parameter,
+        framework: form.framework,
+        confidence: Number(form.confidence),
+        createdBy: 'Admin',
+        category: form.category,
+        parameter: form.parameter,
+        meaning: form.meaning,
+        expectedSecureValue: form.expectedSecureValue,
+        observedValue: form.observedValue === 'true',
+      })
+      setItems((current) => [created, ...current])
+      showToast('Mapping saved to the persistent training model', 'success')
+      try {
+        showToast('Applying mapping to existing analyses…', 'info')
+        await applyTrainingMappings()
+        showToast('Mappings applied to stored analyses', 'success')
+      } catch (err) {
+        showToast('Saved mapping but could not apply to stored analyses', 'warning')
+      }
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Mapping could not be saved.', 'warning')
+    }
   }
 
   return (
@@ -1216,17 +1266,30 @@ function TrainingPage() {
         <h3>UNKNOWN CONFIGURATION</h3>
         <div className="unknown-box">
           <p>Raw command:</p>
-          <code>set management access legacy-protocol enable</code>
+          <input value={form.command} onChange={(event) => setForm((current) => ({ ...current, command: event.target.value }))} aria-label="Raw unknown command" />
         </div>
 
         <div className="training-form-grid">
+          <label>
+            <span>Vendor or OS</span>
+            <input value={form.vendor} onChange={(event) => setForm((current) => ({ ...current, vendor: event.target.value }))} />
+          </label>
           <label>
             <span>Security category</span>
             <input value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))} />
           </label>
           <label>
-            <span>Security parameter</span>
-            <input value={form.parameter} onChange={(event) => setForm((current) => ({ ...current, parameter: event.target.value }))} />
+            <span>Security Baseline Model field</span>
+            <select value={form.parameter} onChange={(event) => setForm((current) => ({ ...current, parameter: event.target.value }))}>
+              <option value="telnet_disabled">telnet_disabled</option>
+              <option value="http_disabled">http_disabled</option>
+              <option value="ssh_version">ssh_version</option>
+              <option value="logging_enabled">logging_enabled</option>
+              <option value="ntp_configured">ntp_configured</option>
+              <option value="aaa_enabled">aaa_enabled</option>
+              <option value="snmp_secure">snmp_secure</option>
+              <option value="idle_timeout">idle_timeout</option>
+            </select>
           </label>
           <label>
             <span>Meaning</span>
@@ -1239,6 +1302,13 @@ function TrainingPage() {
           <label>
             <span>Expected secure value</span>
             <input value={form.expectedSecureValue} onChange={(event) => setForm((current) => ({ ...current, expectedSecureValue: event.target.value }))} />
+          </label>
+          <label>
+            <span>Observed value is compliant</span>
+            <select value={form.observedValue} onChange={(event) => setForm((current) => ({ ...current, observedValue: event.target.value }))}>
+              <option value="false">No — record a finding</option>
+              <option value="true">Yes — mark as compliant</option>
+            </select>
           </label>
           <label>
             <span>Confidence</span>
@@ -1289,12 +1359,14 @@ function TrainingPage() {
 }
 
 function FrameworksPage() {
-  const frameworks: FrameworkDefinition[] = getFrameworks()
+  const [frameworks, setFrameworks] = useState<FrameworkDefinition[]>([])
+
+  useEffect(() => { getFrameworks().then((res) => setFrameworks(res as FrameworkDefinition[])).catch(() => {}) }, [])
 
   return (
     <div className="page-stack">
       <div className="framework-cards">
-        {frameworks.map((framework) => (
+        {frameworks.map((framework: FrameworkDefinition) => (
           <div key={framework.id} className="panel framework-card">
             <div className="framework-card-top">
               <div>
@@ -1316,20 +1388,35 @@ function FrameworksPage() {
 }
 
 function ReportsPage() {
-  const reports = getReports()
+  const [reports, setReports] = useState<ReportItem[]>([])
   const { showToast } = useOutletContext<LayoutContext>()
-  const [selectedReport, setSelectedReport] = useState(reports[0])
+  const [selectedReport, setSelectedReport] = useState<ReportItem | null>(null)
+  const [reportDetails, setReportDetails] = useState<any | null>(null)
+
+  useEffect(() => {
+    getLiveReports().then((items) => { setReports(items); setSelectedReport(items[0] ?? null) }).catch((error) => showToast(error.message, 'warning'))
+  }, [showToast])
+
+  useEffect(() => {
+    if (!selectedReport) { setReportDetails(null); return }
+    // fetch the analysis details for the selected report to render real findings
+    getAnalysisResult(selectedReport.id as string).then((d) => setReportDetails(d)).catch(() => setReportDetails(null))
+  }, [selectedReport])
 
   const exportFile = (type: 'PDF' | 'JSON' | 'CSV') => {
-    const content = type === 'PDF'
-      ? 'NETSECUREAI SECURITY COMPLIANCE REPORT\n\nDevice Information\nCompliance Summary\nFramework\nControls Tested\nPassed Controls\nFailed Controls\nRisk Summary\nDetailed Findings\nEvidence\nRemediation Recommendations\nAudit Information'
-      : JSON.stringify(selectedReport, null, 2)
+    if (!selectedReport) return
+    if (type === 'PDF') {
+      window.open(reportUrl(selectedReport.id), '_blank', 'noopener,noreferrer')
+      showToast('PDF report download started', 'success')
+      return
+    }
+    const content = JSON.stringify(selectedReport, null, 2)
 
-    const blob = new Blob([content], { type: type === 'PDF' ? 'text/plain;charset=utf-8' : 'application/json;charset=utf-8' })
+    const blob = new Blob([content], { type: 'application/json;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
     anchor.href = url
-    anchor.download = `netsecureai-report.${type === 'PDF' ? 'txt' : type.toLowerCase()}`
+    anchor.download = `netsecureai-report.${type.toLowerCase()}`
     anchor.click()
     URL.revokeObjectURL(url)
     showToast(`${type} export generated`, 'success')
@@ -1354,7 +1441,7 @@ function ReportsPage() {
               </tr>
             </thead>
             <tbody>
-              {reports.map((report) => (
+              {reports.length ? reports.map((report) => (
                 <tr key={report.id}>
                   <td>{report.name}</td>
                   <td>{report.device}</td>
@@ -1372,48 +1459,50 @@ function ReportsPage() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )) : <tr><td colSpan={8} className="empty-cell">No reports available until a configuration is scanned.</td></tr>}
             </tbody>
           </table>
         </div>
       </div>
 
-      <div className="panel report-preview">
+      {selectedReport ? <div className="panel report-preview">
         <h3>NETSECUREAI SECURITY COMPLIANCE REPORT</h3>
         <div className="report-section">
           <h4>Device Information</h4>
-          <p>Device: {selectedReport.device}</p>
-          <p>Vendor: {selectedReport.vendor}</p>
-          <p>Framework: {selectedReport.framework}</p>
+          <p>Device: {reportDetails?.device?.name ?? selectedReport.device}</p>
+          <p>Vendor: {reportDetails?.vendor ?? selectedReport.vendor}</p>
+          <p>Framework: {reportDetails?.framework ?? selectedReport.framework}</p>
         </div>
         <div className="report-section">
           <h4>Compliance Summary</h4>
-          <p>Compliance score: {selectedReport.complianceScore}%</p>
-          <p>Controls tested: 128</p>
-          <p>Passed controls: 111</p>
-          <p>Failed controls: 17</p>
+          <p>Compliance score: {reportDetails?.overallScore ?? selectedReport.complianceScore}%</p>
+          <p>Controls tested: {reportDetails?.controls?.length ?? 'n/a'}</p>
+          <p>Passed controls: {reportDetails ? reportDetails.controls.filter((c: any) => c.result === 'Pass').length : 'n/a'}</p>
+          <p>Failed controls: {reportDetails ? reportDetails.controls.filter((c: any) => c.result === 'Fail').length : 'n/a'}</p>
         </div>
         <div className="report-section">
           <h4>Detailed Findings</h4>
           <ul>
-            <li>Telnet enabled on management interface</li>
-            <li>HTTP management interface enabled</li>
-            <li>Logging destination not configured</li>
+            {reportDetails?.controls?.filter((c: any) => c.result !== 'Pass').map((c: any) => (
+              <li key={c.id}>{c.requirement} — <em>{c.severity}</em></li>
+            )) ?? <li>No findings available</li>}
           </ul>
         </div>
-      </div>
+      </div> : null}
     </div>
   )
 }
 
 function AuditLogsPage() {
-  const logs = getAuditLogs()
+  const [logs, setLogs] = useState<any[]>([])
   const [dateFilter, setDateFilter] = useState('All')
   const [userFilter, setUserFilter] = useState('All')
   const [actionFilter, setActionFilter] = useState('All')
   const [resultFilter, setResultFilter] = useState('All')
 
-  const filtered = logs.filter((log) => {
+  useEffect(() => { getAuditLogs().then((res) => setLogs(res as any[])).catch(() => {}) }, [])
+
+  const filtered = logs.filter((log: any) => {
     const matchesDate = dateFilter === 'All' || new Date(log.timestamp).toISOString().slice(0, 10) === dateFilter
     const matchesUser = userFilter === 'All' || log.user === userFilter
     const matchesAction = actionFilter === 'All' || log.action === actionFilter
@@ -1513,6 +1602,17 @@ function SettingsPage() {
           <label className="setting-row"><span>Reduced motion</span><input type="checkbox" defaultChecked /></label>
           <label className="setting-row"><span>Dark enterprise theme</span><input type="checkbox" defaultChecked /></label>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function CompliancePage() {
+  return (
+    <div className="page-stack">
+      <div className="panel">
+        <h2>Compliance</h2>
+        <p>Overview of frameworks and control coverage.</p>
       </div>
     </div>
   )
