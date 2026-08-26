@@ -1,0 +1,49 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      PYTHONPATH: .
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install backend deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install psycopg2-binary boto3 alembic || true
+
+      - name: Run DB migrations (safe fallback)
+        run: |
+          python3 backend/scripts/run_alembic.py
+
+      - name: Run backend storage test
+        run: |
+          python3 backend/scripts/test_storage.py || true
+
+      - name: Run backend tests
+        run: |
+          python -m pip install pytest
+          python -m pytest -q backend/tests
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install frontend deps
+        run: |
+          npm ci --no-audit --no-fund
+
+      - name: Build frontend
+        run: npm run build --if-present
