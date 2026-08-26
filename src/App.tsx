@@ -1608,12 +1608,206 @@ function SettingsPage() {
 }
 
 function CompliancePage() {
+  const [dashboard, setDashboard] = useState<any | null>(null)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    getLiveDashboard()
+      .then((data) => setDashboard(data))
+      .catch((err) => setError(err.message))
+  }, [])
+
+  if (error) {
+    return (
+      <div className="page-stack">
+        <div className="panel">
+          <h2>Compliance</h2>
+          <p className="error-text">{error}</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!dashboard) {
+    return (
+      <div className="page-stack">
+        <div className="panel">
+          <h2>Compliance</h2>
+          <p>Loading compliance data...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="page-stack">
+
       <div className="panel">
-        <h2>Compliance</h2>
-        <p>Overview of frameworks and control coverage.</p>
+        <div className="section-heading">
+          <div>
+            <h2>Compliance Management</h2>
+            <p>
+              Overview of compliance posture, frameworks and control coverage.
+            </p>
+          </div>
+        </div>
       </div>
+
+      <div className="stats-grid">
+
+        <div className="stat-card">
+          <span className="label">Overall Compliance</span>
+          <strong>{dashboard.overallScore}%</strong>
+          <small>Latest analyzed configuration</small>
+        </div>
+
+        <div className="stat-card">
+          <span className="label">Configurations Analyzed</span>
+          <strong>{dashboard.configurationsAnalyzed}</strong>
+          <small>Total security analyses</small>
+        </div>
+
+        <div className="stat-card">
+          <span className="label">Open Findings</span>
+          <strong>{dashboard.openFindings}</strong>
+          <small>Issues requiring attention</small>
+        </div>
+
+        <div className="stat-card">
+          <span className="label">Monitored Devices</span>
+          <strong>{dashboard.totalDevices}</strong>
+          <small>Devices in the current dataset</small>
+        </div>
+
+      </div>
+
+      <div className="two-column-grid">
+
+        <div className="panel">
+          <div className="section-heading">
+            <div>
+              <h3>Framework Compliance</h3>
+              <p>Compliance score by security framework.</p>
+            </div>
+          </div>
+
+          {dashboard.frameworkComparison?.length ? (
+            <div className="data-list">
+              {dashboard.frameworkComparison.map((framework: any) => (
+                <div className="data-row" key={framework.name}>
+                  <div>
+                    <strong>{framework.name}</strong>
+                  </div>
+
+                  <div>
+                    <strong>{framework.score}%</strong>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state">
+              No framework compliance data available yet.
+            </div>
+          )}
+        </div>
+
+        <div className="panel">
+          <div className="section-heading">
+            <div>
+              <h3>Vendor Compliance</h3>
+              <p>Compliance posture by device vendor.</p>
+            </div>
+          </div>
+
+          {dashboard.vendorCompliance?.length ? (
+            <div className="data-list">
+              {dashboard.vendorCompliance.map((vendor: any) => (
+                <div className="data-row" key={vendor.name}>
+                  <div>
+                    <strong>{vendor.name}</strong>
+                  </div>
+
+                  <div>
+                    <strong>{vendor.score}%</strong>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state">
+              No vendor compliance data available yet.
+            </div>
+          )}
+        </div>
+
+      </div>
+
+      <div className="panel">
+        <div className="section-heading">
+          <div>
+            <h3>Severity Breakdown</h3>
+            <p>Current findings grouped by severity.</p>
+          </div>
+        </div>
+
+        <div className="severity-grid">
+
+          {dashboard.severityBreakdown?.map((item: any) => (
+            <div className="severity-card" key={item.name}>
+              <span>{item.name}</span>
+              <strong>{item.value}</strong>
+            </div>
+          ))}
+
+        </div>
+      </div>
+
+      <div className="panel">
+        <div className="section-heading">
+          <div>
+            <h3>Recent Compliance Activity</h3>
+            <p>Latest configuration analyses.</p>
+          </div>
+        </div>
+
+        {dashboard.recentActivity?.length ? (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Device</th>
+                  <th>Vendor</th>
+                  <th>Framework</th>
+                  <th>Score</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {dashboard.recentActivity.map((item: any) => (
+                  <tr key={item.id}>
+                    <td>{item.device}</td>
+                    <td>{item.vendor}</td>
+                    <td>{item.framework}</td>
+                    <td>{item.score}%</td>
+                    <td>{item.status}</td>
+                    <td>
+                      {new Date(item.date).toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="empty-state">
+            No compliance activity available yet.
+          </div>
+        )}
+      </div>
+
     </div>
   )
 }

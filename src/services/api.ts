@@ -35,15 +35,50 @@ export const getLiveTrainingMappings = () => request<any[]>('/training-mappings'
 export const reportUrl = (analysisId: string) => `${API_URL}/analyses/${analysisId}/report.pdf`
 // helper: fetch dashboard-shaped stats from backend
 export const getDashboardStats = async () => {
-  const live = await getLiveDashboard()
+  const [live, findings] = await Promise.all([
+    getLiveDashboard(),
+    getLiveFindings(),
+  ])
+
+  const criticalFindings = findings.filter(
+    (finding: any) => finding.severity === 'Critical'
+  )
+
+  const trend = live.recentActivity
+    .slice()
+    .reverse()
+    .map((item) => ({
+      name: new Date(item.date).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+      }),
+      score: item.score,
+    }))
+
   return {
-    snapshot: { totalDevices: live.totalDevices, configurationsAnalyzed: live.configurationsAnalyzed, overallScore: live.overallScore, compliantDevices: 0, nonCompliantDevices: 0, lastAnalysis: live.recentActivity[0]?.date ?? 'No scans yet', criticalFindings: live.severityBreakdown.find((item) => item.name === 'Critical')?.value ?? 0, highRiskFindings: live.severityBreakdown.find((item) => item.name === 'High')?.value ?? 0 },
-    trend: live.recentActivity.map((item: any) => ({ name: item.device, score: item.score })),
+    snapshot: {
+      totalDevices: live.totalDevices,
+      configurationsAnalyzed: live.configurationsAnalyzed,
+      overallScore: live.overallScore,
+      openFindings: live.openFindings,
+      lastAnalysis:
+        live.recentActivity[0]?.date ?? 'No scans yet',
+    },
+
+    trend,
+
     severityBreakdown: live.severityBreakdown,
+
     vendorCompliance: live.vendorCompliance,
+
     frameworkComparison: live.frameworkComparison,
-    recentActivity: live.recentActivity,
-    criticalFindings: [],
+
+    recentActivity: live.recentActivity.map((item) => ({
+      ...item,
+      analysis: `${item.framework} analysis`,
+    })),
+
+    criticalFindings,
   }
 }
 

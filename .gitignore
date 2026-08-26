@@ -26,3 +26,8 @@ dist-ssr
 backend/data/*.sqlite3
 __pycache__/
 *.pyc
+
+backend/.env
+
+backend/venv/
+backend/data/uploads/
