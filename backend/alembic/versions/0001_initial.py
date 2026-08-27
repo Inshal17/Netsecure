@@ -1,7 +1,7 @@
 """initial migration
 
 Revision ID: 0001_initial
-Revises:
+Revises: 
 Create Date: 2026-08-25
 """
 from alembic import op
