@@ -98,11 +98,14 @@ export const uploadConfiguration = (fileName: string, vendor?: string): UploadRe
   status: 'Detected',
 })
 
-export const startAnalysis = async (file: File, vendor: string, framework: string): Promise<{ job: AnalysisJob; result: AnalysisResult }> => {
+export const startAnalysis = async (file: File, vendor: string, framework: string, inventory: { model?: string; serial?: string; ipAddress?: string } = {}): Promise<{ job: AnalysisJob; result: AnalysisResult }> => {
   const form = new FormData()
   form.append('file', file)
   form.append('vendor', vendor)
   form.append('framework', framework)
+  form.append('device_model', inventory.model ?? '')
+  form.append('device_serial', inventory.serial ?? '')
+  form.append('device_ip', inventory.ipAddress ?? '')
   const response = await fetch(`${API_URL}/analyses/upload`, { method: 'POST', body: form })
   if (!response.ok) {
     const details = await response.json().catch(() => null)
@@ -140,6 +143,22 @@ export const startAnalysis = async (file: File, vendor: string, framework: strin
   runtimeJobs.unshift(job)
   runtimeResults.unshift(result)
   return { job, result }
+}
+
+export const startAnalysisBatch = async (files: File[], vendor: string, framework: string, inventory: { model?: string; serial?: string; ipAddress?: string } = {}) => {
+  const form = new FormData()
+  files.forEach((file) => form.append('files', file))
+  form.append('vendor', vendor)
+  form.append('framework', framework)
+  form.append('device_model', inventory.model ?? '')
+  form.append('device_serial', inventory.serial ?? '')
+  form.append('device_ip', inventory.ipAddress ?? '')
+  const response = await fetch(`${API_URL}/analyses/upload-batch`, { method: 'POST', body: form })
+  if (!response.ok) {
+    const details = await response.json().catch(() => null)
+    throw new Error(details?.detail ?? 'The compliance API could not analyze these files.')
+  }
+  return response.json() as Promise<any[]>
 }
 
 
@@ -239,7 +258,13 @@ export const getUploadedFiles = async () => {
 
 export const rawUrl = (analysisId: string) => `${API_URL}/analyses/${analysisId}/raw`
 
-export const getStorageInfo = () => request<{ s3_configured: boolean; s3_bucket?: string }>('/storage-info')
+export const getStorageInfo = async () => {
+  const info = await request<{ supabase_configured: boolean; supabase_bucket?: string }>('/storage-info')
+  return {
+    s3_configured: info.supabase_configured,
+    s3_bucket: info.supabase_bucket,
+  }
+}
 
 export const reRunUploadedAnalysis = async (analysisId: string, framework = 'CIS Benchmarks') => {
   // download raw content then POST as a file to startAnalysis

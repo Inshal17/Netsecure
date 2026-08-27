@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import {
   Activity,
@@ -7,11 +7,14 @@ import {
   ArrowRight,
   Bell,
   ChevronRight,
+  Command,
   HardDrive,
   Menu,
+  Moon,
   Network,
   Search,
   ShieldCheck,
+  Sun,
   UploadCloud,
   UserCircle,
   X,
@@ -59,6 +62,7 @@ import {
   saveTrainingMapping,
   applyTrainingMappings,
   startAnalysis,
+  startAnalysisBatch,
   getStorageInfo,
   reRunUploadedAnalysis,
 } from './services/api'
@@ -121,25 +125,120 @@ function SeverityPill({ severity }: { severity: string }) {
   return <span className={`severity-pill ${palette[severity] ?? 'low'}`}>{severity}</span>
 }
 
-function StatCard({ label, value, trend, icon: Icon, accent }: { label: string; value: string; trend?: string; icon: LucideIcon; accent?: 'cyan' | 'purple' | 'green' | 'amber' | 'red' }) {
+/** Eases a numeric value from 0 to `target` on mount/update. Presentational only. */
+function useAnimatedValue(target: number, duration = 900) {
+  const [value, setValue] = useState(0)
+  const targetRef = useRef(target)
+
+  useEffect(() => {
+    targetRef.current = target
+    const prefersReduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersReduced) {
+      setValue(target)
+      return
+    }
+    let raf = 0
+    const start = performance.now()
+    const animate = (now: number) => {
+      const elapsed = now - start
+      const progress = Math.min(1, elapsed / duration)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setValue(targetRef.current * eased)
+      if (progress < 1) raf = requestAnimationFrame(animate)
+    }
+    raf = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(raf)
+  }, [target, duration])
+
+  return value
+}
+
+/** Renders a string like "82%" or "1,204" with the numeric portion counting up on mount. */
+function AnimatedNumber({ value }: { value: string }) {
+  const match = value.match(/^(-?[\d,.]+)(.*)$/)
+  const numeric = match ? Number(match[1].replace(/,/g, '')) : NaN
+  const suffix = match ? match[2] : ''
+  const animated = useAnimatedValue(Number.isFinite(numeric) ? numeric : 0, 900)
+
+  if (!Number.isFinite(numeric)) return <>{value}</>
+
+  const isInteger = Number.isInteger(numeric)
+  const display = isInteger ? Math.round(animated).toLocaleString() : animated.toFixed(1)
+  return <>{display}{suffix}</>
+}
+
+/** Circular compliance gauge; the stroke eases in from 0 to `value` on mount. */
+function ProgressRing({ value, size = 96, stroke = 10, color = 'var(--signal)', trackColor = 'rgba(163, 147, 130, 0.25)' }: { value: number; size?: number; stroke?: number; color?: string; trackColor?: string }) {
+  const radius = (size - stroke) / 2
+  const circumference = 2 * Math.PI * radius
+  const animatedValue = useAnimatedValue(value, 1100)
+  const clamped = Math.min(100, Math.max(0, animatedValue))
+  const offset = circumference - (clamped / 100) * circumference
+
   return (
-    <div className="stat-card">
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="progress-ring" role="img" aria-label={`${Math.round(value)} percent`}>
+      <circle cx={size / 2} cy={size / 2} r={radius} stroke={trackColor} strokeWidth={stroke} fill="none" />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        stroke={color}
+        strokeWidth={stroke}
+        fill="none"
+        strokeLinecap="round"
+        strokeDasharray={circumference}
+        strokeDashoffset={offset}
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+      />
+    </svg>
+  )
+}
+
+/** Minimal inline trend line — pure presentation, computed from already-fetched numbers. */
+function Sparkline({ points, color = 'var(--signal)' }: { points: number[]; color?: string }) {
+  if (!points || points.length < 2) return null
+  const width = 72
+  const height = 26
+  const min = Math.min(...points)
+  const max = Math.max(...points)
+  const range = max - min || 1
+  const step = width / (points.length - 1)
+  const coords = points.map((value, index) => {
+    const x = index * step
+    const y = height - ((value - min) / range) * height
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  })
+  const areaPath = `M0,${height} L${coords.join(' L')} L${width},${height} Z`
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="sparkline" preserveAspectRatio="none">
+      <path d={areaPath} fill={color} opacity={0.14} stroke="none" />
+      <polyline points={coords.join(' ')} fill="none" stroke={color} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function StatCard({ label, value, trend, icon: Icon, accent, spark }: { label: string; value: string; trend?: string; icon: LucideIcon; accent?: 'cyan' | 'purple' | 'green' | 'amber' | 'red'; spark?: number[] }) {
+  return (
+    <div className={`stat-card accent-${accent ?? 'cyan'}`}>
       <div className="stat-head">
         <div>
           <p>{label}</p>
-          <h3>{value}</h3>
+          <h3><AnimatedNumber value={value} /></h3>
         </div>
         <span className={`stat-icon ${accent ?? 'cyan'}`}><Icon size={18} /></span>
       </div>
-      {trend ? <div className="trend">{trend}</div> : null}
+      <div className="stat-foot">
+        {trend ? <div className="trend">{trend}</div> : <span />}
+        {spark && spark.length > 1 ? <Sparkline points={spark} /> : null}
+      </div>
     </div>
   )
 }
 
-function SectionHeader({ title, actions }: { title: string; actions?: React.ReactNode }) {
+function SectionHeader({ title, actions, icon: Icon }: { title: string; actions?: React.ReactNode; icon?: LucideIcon }) {
   return (
     <div className="section-header">
-      <h2>{title}</h2>
+      <h2>{Icon ? <Icon size={16} className="section-icon" /> : null}<span>{title}</span></h2>
       {actions ? <div className="section-actions">{actions}</div> : null}
     </div>
   )
@@ -148,18 +247,74 @@ function SectionHeader({ title, actions }: { title: string; actions?: React.Reac
 function Layout() {
   const [searchTerm, setSearchTerm] = useState('')
   const [toasts, setToasts] = useState<Toast[]>([])
+  const [notifications, setNotifications] = useState<Toast[]>([])
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(true)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  const [paletteQuery, setPaletteQuery] = useState('')
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    if (typeof window === 'undefined') return 'light'
+    return 'light'
+  })
+  const [now, setNow] = useState(() => new Date())
+  const navRef = useRef<HTMLElement | null>(null)
+  const notificationsRef = useRef<HTMLDivElement | null>(null)
   const location = useLocation()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    setMobileNavOpen(false)
+  }, [location.pathname])
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    window.localStorage.setItem('nsai-theme', theme)
+  }, [theme])
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000 * 30)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setPaletteOpen((current) => !current)
+      }
+      if (event.key === 'Escape') {
+        setPaletteOpen(false)
+        setNotificationsOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+        setNotificationsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const showToast = (message: string, variant: 'success' | 'warning' | 'info' = 'success') => {
     const id = Date.now() + Math.random()
-    setToasts((current) => [...current, { id, message, variant }])
+    const entry = { id, message, variant }
+    setToasts((current) => [...current, entry])
+    setNotifications((current) => [entry, ...current].slice(0, 8))
     window.setTimeout(() => {
       setToasts((current) => current.filter((toast) => toast.id !== id))
     }, 3200)
   }
 
   const pageTitleMap: Record<string, string> = {
-    '/': 'Network Security Posture',
+    '/': 'NetSecureAI',
+    '/dashboard': 'Network Security Posture',
     '/devices': 'Network Devices',
     '/configuration': 'Configuration Ingestion',
     '/analysis': 'Analysis Pipeline',
@@ -174,7 +329,8 @@ function Layout() {
   }
 
   const pageDescriptionMap: Record<string, string> = {
-    '/': 'Monitor configuration compliance across your network infrastructure.',
+    '/': 'Configuration compliance, made clear.',
+    '/dashboard': 'Monitor configuration compliance across your network infrastructure.',
     '/devices': 'Manage monitored infrastructure and compliance posture.',
     '/configuration': 'Upload network device configurations for automated security analysis.',
     '/analysis': 'Track staged validation across normalization and compliance checks.',
@@ -192,82 +348,217 @@ function Layout() {
   const currentTitle = pageTitleMap[location.pathname] ?? (matchedPath ? pageTitleMap[matchedPath] : 'NetSecureAI')
   const currentDescription = pageDescriptionMap[location.pathname] ?? (matchedPath ? pageDescriptionMap[matchedPath] : 'Network security operations overview.')
 
-  const navItems: { to: string; label: string; icon: LucideIcon }[] = [
-    { to: '/', label: 'Dashboard', icon: Activity },
-    { to: '/devices', label: 'Devices', icon: HardDrive },
-    { to: '/configuration', label: 'Configuration', icon: UploadCloud },
-    { to: '/analysis', label: 'Analysis', icon: Network },
-    { to: '/compliance', label: 'Compliance', icon: ShieldCheck },
-    { to: '/findings', label: 'Findings', icon: AlertTriangle },
-    { to: '/remediation', label: 'Remediation', icon: ArrowRight },
-    { to: '/training', label: 'Training', icon: UserCircle },
-    { to: '/frameworks', label: 'Frameworks', icon: ShieldCheck },
-    { to: '/reports', label: 'Reports', icon: Activity },
-    { to: '/audit-logs', label: 'Audit Logs', icon: Bell },
-    { to: '/settings', label: 'Settings', icon: X },
+  const navGroups: { label: string; items: { to: string; label: string; icon: LucideIcon }[] }[] = [
+    {
+      label: 'Overview',
+      items: [{ to: '/dashboard', label: 'Dashboard', icon: Activity }],
+    },
+    {
+      label: 'Operations',
+      items: [
+        { to: '/devices', label: 'Devices', icon: HardDrive },
+        { to: '/configuration', label: 'Configuration', icon: UploadCloud },
+        { to: '/analysis', label: 'Analysis', icon: Network },
+      ],
+    },
+    {
+      label: 'Security',
+      items: [
+        { to: '/compliance', label: 'Compliance', icon: ShieldCheck },
+        { to: '/findings', label: 'Findings', icon: AlertTriangle },
+        { to: '/remediation', label: 'Remediation', icon: ArrowRight },
+      ],
+    },
+    {
+      label: 'Administration',
+      items: [
+        { to: '/training', label: 'Training', icon: UserCircle },
+        { to: '/frameworks', label: 'Frameworks', icon: ShieldCheck },
+        { to: '/reports', label: 'Reports', icon: Activity },
+        { to: '/audit-logs', label: 'Audit Logs', icon: Bell },
+        { to: '/settings', label: 'Settings', icon: X },
+      ],
+    },
   ]
 
+  const flatNavItems = navGroups.flatMap((group) => group.items)
+  const paletteMatches = paletteQuery.trim()
+    ? flatNavItems.filter((item) => item.label.toLowerCase().includes(paletteQuery.trim().toLowerCase()))
+    : flatNavItems
+
+  // Slides a highlight pill behind the active nav link — measured against the real DOM node
+  // so it glides smoothly between items instead of just swapping a background color.
+  const [indicatorStyle, setIndicatorStyle] = useState<{ top: number; height: number; opacity: number }>({ top: 0, height: 0, opacity: 0 })
+
+  useLayoutEffect(() => {
+    const container = navRef.current
+    if (!container) return
+    const activeEl = container.querySelector<HTMLElement>('.nav-item.active')
+    if (!activeEl) {
+      setIndicatorStyle((current) => ({ ...current, opacity: 0 }))
+      return
+    }
+    const containerRect = container.getBoundingClientRect()
+    const activeRect = activeEl.getBoundingClientRect()
+    setIndicatorStyle({ top: activeRect.top - containerRect.top, height: activeRect.height, opacity: 1 })
+  }, [location.pathname, collapsed, mobileNavOpen])
+
+  const timeLabel = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  const dateLabel = now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })
+
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
+    <div className={`app-shell ${collapsed ? 'sidebar-collapsed' : ''} ${location.pathname === '/' ? 'landing-shell' : ''}`}>
+      <header className="topbar">
+        <button type="button" className="icon-button mobile-only" aria-label="Toggle navigation" onClick={() => setMobileNavOpen((current) => !current)}>
+          <Menu size={18} />
+        </button>
+
         <div className="brand-wrap">
-          <div className="brand-mark"><ShieldCheck size={22} /></div>
-          <div>
+          <div className="brand-mark"><ShieldCheck size={19} /></div>
+          <div className="brand-copy">
             <div className="brand-name">NetSecureAI</div>
             <div className="brand-subtitle">Compliance Engine</div>
           </div>
         </div>
+      </header>
 
-        <nav className="sidebar-nav" aria-label="Main navigation">
-          {navItems.map(({ to, label, icon: Icon }) => (
-            <NavLink key={to} to={to} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} end={to === '/'}>
-              <Icon size={16} />
-              <span>{label}</span>
-            </NavLink>
-          ))}
-        </nav>
-      </aside>
+      <div className="shell-body">
+        {mobileNavOpen ? <div className="nav-scrim" onClick={() => setMobileNavOpen(false)} /> : null}
 
-      <main className="main-panel">
-        <header className="topbar">
-          <div className="left-header">
-            <button type="button" className="icon-button mobile-only" aria-label="Toggle navigation">
-              <Menu size={18} />
-            </button>
-            <div className="header-copy">
-              <p className="eyebrow">Network Security Operations</p>
-              <h1>{currentTitle}</h1>
-              <p className="header-subtitle">{currentDescription}</p>
-            </div>
-          </div>
+        <aside className={`sidebar ${mobileNavOpen ? 'nav-open' : ''}`}>
+          <button type="button" className="sidebar-collapse-toggle" onClick={() => setCollapsed((current) => !current)} aria-label={collapsed ? 'Expand navigation' : 'Collapse navigation'}>
+            {!collapsed ? <span className="toggle-label">Navigation</span> : null}
+            <ChevronRight size={16} className="toggle-chevron" />
+          </button>
 
-          <div className="right-header">
-            <label className="search-box" aria-label="Search">
-              <Search size={16} />
+          <nav className="sidebar-nav" aria-label="Main navigation" ref={navRef}>
+            <div className="nav-indicator" style={{ top: indicatorStyle.top, height: indicatorStyle.height, opacity: indicatorStyle.opacity }} />
+            {navGroups.map((group) => (
+              <div className="nav-group" key={group.label}>
+                <p className="nav-group-label">{group.label}</p>
+                {group.items.map(({ to, label, icon: Icon }) => (
+                  <NavLink key={to} to={to} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} end={to === '/'} title={label}>
+                    <Icon size={16} />
+                    <span>{label}</span>
+                  </NavLink>
+                ))}
+              </div>
+            ))}
+          </nav>
+        </aside>
+
+        <main className="main-panel">
+          <div className="subheader">
+            <label className="search-box thin-search" aria-label="Search">
+              <Search size={15} />
               <input
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Search assets, findings, controls..."
+                placeholder="Search"
               />
             </label>
-            <button type="button" className="icon-button" aria-label="Notifications">
-              <Bell size={17} />
-            </button>
-            <div className="status-indicator">
-              <span className="status-dot" />
-              Operational
-            </div>
-            <div className="profile-pill">
-              <UserCircle size={18} />
-              <span>Admin</span>
+
+            <div className="subheader-actions">
+              <button type="button" className="icon-button kbd-button" aria-label="Open command palette" onClick={() => setPaletteOpen(true)} title="Jump to a page (Ctrl/Cmd K)">
+                <Command size={16} />
+              </button>
+
+              <div className="clock-chip" title={dateLabel}>
+                <span className="clock-time">{timeLabel}</span>
+                <span className="clock-date">{dateLabel}</span>
+              </div>
+
+              <button type="button" className="icon-button" aria-label="Toggle theme" onClick={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))}>
+                {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+              </button>
+
+              <div className="notifications-wrap" ref={notificationsRef}>
+                <button type="button" className="icon-button" aria-label="Notifications" onClick={() => setNotificationsOpen((current) => !current)}>
+                  <Bell size={17} />
+                  {notifications.length ? <span className="notif-count">{notifications.length}</span> : null}
+                </button>
+                {notificationsOpen ? (
+                  <div className="notifications-panel">
+                    <div className="notifications-head">
+                      <span>Activity</span>
+                      {notifications.length ? (
+                        <button type="button" className="ghost-button small" onClick={() => setNotifications([])}>Clear</button>
+                      ) : null}
+                    </div>
+                    {notifications.length ? (
+                      <div className="notifications-list">
+                        {notifications.map((item) => (
+                          <div key={item.id} className={`notification-row ${item.variant}`}>
+                            <span className="dot-status" />
+                            <span>{item.message}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="notifications-empty">You're all caught up. Actions you take will show up here.</p>
+                    )}
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="status-indicator">
+                <span className="status-dot" />
+                Operational
+              </div>
+              <div className="profile-pill">
+                <UserCircle size={18} />
+                <span>Admin</span>
+              </div>
             </div>
           </div>
-        </header>
 
-        <div className="content-area">
-          <Outlet context={{ showToast, searchTerm, setSearchTerm }} />
+          <div className="content-area">
+            <div className="page-heading">
+              <h1>{currentTitle}</h1>
+              <p>{currentDescription}</p>
+            </div>
+            <Outlet context={{ showToast, searchTerm, setSearchTerm }} />
+          </div>
+        </main>
+      </div>
+
+      {paletteOpen ? (
+        <div className="modal-backdrop" onClick={() => setPaletteOpen(false)}>
+          <div className="command-palette" onClick={(event) => event.stopPropagation()}>
+            <div className="command-input">
+              <Search size={16} />
+              <input
+                autoFocus
+                value={paletteQuery}
+                onChange={(event) => setPaletteQuery(event.target.value)}
+                placeholder="Jump to a page..."
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && paletteMatches[0]) {
+                    navigate(paletteMatches[0].to)
+                    setPaletteOpen(false)
+                    setPaletteQuery('')
+                  }
+                }}
+              />
+              <span className="kbd-hint">Esc</span>
+            </div>
+            <div className="command-results">
+              {paletteMatches.length ? paletteMatches.map(({ to, label, icon: Icon }) => (
+                <button
+                  type="button"
+                  key={to}
+                  className="command-result"
+                  onClick={() => { navigate(to); setPaletteOpen(false); setPaletteQuery('') }}
+                >
+                  <Icon size={15} />
+                  <span>{label}</span>
+                  <ArrowRight size={14} className="command-arrow" />
+                </button>
+              )) : <p className="empty-state">No matching pages.</p>}
+            </div>
+          </div>
         </div>
-      </main>
+      ) : null}
 
       <div className="toast-stack" aria-live="polite">
         {toasts.map((toast) => (
@@ -307,26 +598,115 @@ function DashboardPage() {
 
   return (
     <div className="page-stack">
-      <div className="action-row">
-        <button type="button" className="primary-button" onClick={() => navigate('/configuration')}>
-          <UploadCloud size={16} />
-          Upload Configuration
-        </button>
-        <button type="button" className="secondary-button" onClick={() => navigate('/analysis')}>
-          <Activity size={16} />
-          Analyze Configuration
-        </button>
-        <button type="button" className="ghost-button" onClick={() => navigate('/findings')}>
-          <AlertTriangle size={16} />
-          View Findings
-        </button>
+      <div className="hero-panel">
+        <div className="hero-copy">
+          <p className="eyebrow">Live Security Posture</p>
+          <h2>Overall compliance is holding at {dashboard.snapshot.overallScore}%</h2>
+          <p className="hero-subtitle">
+            {dashboard.snapshot.totalDevices} devices scanned · last analysis {dashboard.snapshot.lastAnalysis}
+          </p>
+          <div className="action-row">
+            <button type="button" className="primary-button" onClick={() => navigate('/configuration')}>
+              <UploadCloud size={16} />
+              Upload Configuration
+            </button>
+            <button type="button" className="secondary-button" onClick={() => navigate('/analysis')}>
+              <Activity size={16} />
+              Analyze Configuration
+            </button>
+            <button type="button" className="ghost-button" onClick={() => navigate('/findings')}>
+              <AlertTriangle size={16} />
+              View Findings
+            </button>
+          </div>
+        </div>
+        <div className="hero-ring">
+          <ProgressRing value={dashboard.snapshot.overallScore} size={132} stroke={12} />
+          <div className="hero-ring-label">
+            <strong><AnimatedNumber value={`${dashboard.snapshot.overallScore}%`} /></strong>
+            <span>Compliant</span>
+          </div>
+        </div>
       </div>
 
       <div className="stats-grid primary-stats">
         <StatCard label="Devices scanned" value={String(dashboard.snapshot.totalDevices)} trend="Unique devices from persisted scans" icon={HardDrive} accent="purple" />
         <StatCard label="Configurations analyzed" value={String(dashboard.snapshot.configurationsAnalyzed)} trend="Persisted scan history" icon={Network} accent="cyan" />
-        <StatCard label="Current compliance" value={`${dashboard.snapshot.overallScore}%`} trend="Latest scan for each device" icon={ShieldCheck} accent="green" />
+        <StatCard label="Current compliance" value={`${dashboard.snapshot.overallScore}%`} trend="Latest scan for each device" icon={ShieldCheck} accent="green" spark={dashboard.trend.map((item: any) => item.score)} />
         <StatCard label="Open findings" value={String(dashboard.snapshot.criticalFindings + dashboard.snapshot.highRiskFindings)} trend="Critical and high severity" icon={AlertTriangle} accent="red" />
+      </div>
+
+      <div className="dashboard-grid">
+        <div className="panel chart-panel">
+          <SectionHeader title="Recent Scan Scores" />
+          <div className="chart-box">
+            <ResponsiveContainer width="100%" height={220}>
+              <AreaChart data={dashboard.trend}>
+                <defs>
+                  <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#82776c" stopOpacity={0.18} />
+                    <stop offset="100%" stopColor="#82776c" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid stroke="#e5ded2" strokeDasharray="4 4" />
+                <XAxis dataKey="name" stroke="#685d54" />
+                <YAxis domain={[50, 100]} stroke="#685d54" />
+                <Tooltip />
+                <Area type="monotone" dataKey="score" stroke="#171411" fill="url(#scoreFill)" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="panel chart-panel">
+          <SectionHeader title="Open Findings" />
+          <div className="chart-box">
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={dashboard.severityBreakdown}>
+                <CartesianGrid stroke="#e5ded2" strokeDasharray="4 4" />
+                <XAxis dataKey="name" stroke="#685d54" />
+                <YAxis stroke="#685d54" />
+                <Tooltip />
+                <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                  {dashboard.severityBreakdown.map((entry: any) => (
+                    <Cell key={entry.name} fill={entry.name === 'Critical' ? '#232323' : entry.name === 'High' ? '#685d54' : entry.name === 'Medium' ? '#a39382' : '#e5ded2'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="panel chart-panel">
+          <SectionHeader title="Vendor Compliance" />
+          <div className="chart-box">
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={dashboard.vendorCompliance} layout="vertical" margin={{ left: 10 }}>
+                <CartesianGrid stroke="#e5ded2" strokeDasharray="4 4" />
+                <XAxis type="number" domain={[0, 100]} stroke="#685d54" />
+                <YAxis dataKey="name" type="category" width={110} stroke="#685d54" />
+                <Tooltip />
+                <Bar dataKey="score" radius={[0, 6, 6, 0]} fill="#82776c" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="panel chart-panel">
+          <SectionHeader title="Framework Coverage" />
+          <div className="chart-box">
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie data={dashboard.frameworkComparison} dataKey="score" nameKey="name" innerRadius={42} outerRadius={76} paddingAngle={3}>
+                  {dashboard.frameworkComparison.map((entry: any, index: number) => (
+                    <Cell key={entry.name} fill={['#171411', '#82776c', '#c8bfb4', '#ded8d0'][index % 4]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
 
       <div className="insight-row">
@@ -346,79 +726,6 @@ function DashboardPage() {
                 <div className="progress-track"><span style={{ width: `${item.score}%` }} /></div>
               </div>
             ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="dashboard-grid">
-        <div className="panel chart-panel">
-          <SectionHeader title="Recent Scan Scores" />
-          <div className="chart-box">
-            <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={dashboard.trend}>
-                <defs>
-                  <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#93c5fd" stopOpacity={0.28} />
-                    <stop offset="100%" stopColor="#93c5fd" stopOpacity={0.04} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke="#dfe7ef" strokeDasharray="4 4" />
-                <XAxis dataKey="name" stroke="#64748b" />
-                <YAxis domain={[50, 100]} stroke="#64748b" />
-                <Tooltip />
-                <Area type="monotone" dataKey="score" stroke="#2563eb" fill="url(#scoreFill)" strokeWidth={3} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="panel chart-panel">
-          <SectionHeader title="Open Findings" />
-          <div className="chart-box">
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={dashboard.severityBreakdown}>
-                <CartesianGrid stroke="#dfe7ef" strokeDasharray="4 4" />
-                <XAxis dataKey="name" stroke="#64748b" />
-                <YAxis stroke="#64748b" />
-                <Tooltip />
-                <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                  {dashboard.severityBreakdown.map((entry: any) => (
-                    <Cell key={entry.name} fill={entry.name === 'Critical' ? '#dc2626' : entry.name === 'High' ? '#f97316' : entry.name === 'Medium' ? '#d97706' : '#2563eb'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="panel chart-panel">
-          <SectionHeader title="Vendor Compliance" />
-          <div className="chart-box">
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={dashboard.vendorCompliance} layout="vertical" margin={{ left: 10 }}>
-                <CartesianGrid stroke="#dfe7ef" strokeDasharray="4 4" />
-                <XAxis type="number" domain={[0, 100]} stroke="#64748b" />
-                <YAxis dataKey="name" type="category" width={110} stroke="#64748b" />
-                <Tooltip />
-                <Bar dataKey="score" radius={[0, 6, 6, 0]} fill="#60a5fa" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="panel chart-panel">
-          <SectionHeader title="Framework Coverage" />
-          <div className="chart-box">
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie data={dashboard.frameworkComparison} dataKey="score" nameKey="name" innerRadius={42} outerRadius={76} paddingAngle={3}>
-                  {dashboard.frameworkComparison.map((entry: any, index: number) => (
-                    <Cell key={entry.name} fill={['#60a5fa', '#93c5fd', '#d1d5db', '#cbd5e1'][index % 4]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
           </div>
         </div>
       </div>
@@ -475,6 +782,82 @@ function DashboardPage() {
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function LandingPage() {
+  const navigate = useNavigate()
+
+  return (
+    <div className="landing-page">
+      <section className="landing-hero">
+        <p className="landing-kicker">NetSecureAI / Network security operations</p>
+        <h1>Make every configuration<br /><em>count.</em></h1>
+        <p className="landing-lede">A clear, evidence-led way to understand configuration risk across your network.</p>
+        <div className="landing-actions">
+          <button type="button" className="primary-button" onClick={() => navigate('/dashboard')}>Open live dashboard <ArrowRight size={16} /></button>
+          <button type="button" className="text-link" onClick={() => navigate('/configuration')}>Run an analysis <ArrowRight size={14} /></button>
+        </div>
+        <div className="landing-stage" aria-label="NetSecureAI workflow">
+          <div className="stage-card stage-back"><span>03</span><strong>Action</strong><small>Remediation paths</small></div>
+          <div className="stage-card stage-middle"><span>02</span><strong>Evidence</strong><small>Control-level findings</small></div>
+          <div className="stage-card stage-front"><span>01</span><strong>Configuration</strong><small>Vendor-aware analysis</small></div>
+        </div>
+        <div className="landing-rule" />
+        <p className="landing-note">Built for teams who need the answer, the evidence, and the next action in one place.</p>
+      </section>
+
+      <section className="landing-gallery" aria-label="Network security operations">
+        <figure className="gallery-feature">
+          <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1400&q=80" alt="Rows of network servers in a data center" />
+          <figcaption><span>01 / Infrastructure</span><strong>Visibility starts with what is already there.</strong></figcaption>
+        </figure>
+        <figure className="gallery-detail">
+          <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=900&q=80" alt="Close view of a circuit board" />
+          <figcaption><span>02 / Detail</span><strong>Every control has evidence behind it.</strong></figcaption>
+        </figure>
+      </section>
+
+      <section className="landing-intro">
+        <p className="eyebrow">What it does</p>
+        <h2>Turn raw device exports into decisions your team can stand behind.</h2>
+        <div className="landing-columns">
+          <p>NetSecureAI reads network configurations, maps them to security baselines, and makes the gaps visible without burying the signal in noise.</p>
+          <p>Every result stays connected to its device, framework, evidence, and remediation path, so review moves naturally into action.</p>
+        </div>
+      </section>
+
+      <section className="landing-services">
+        <div className="landing-section-heading">
+          <p className="eyebrow">The workspace</p>
+          <span>01 — 03</span>
+        </div>
+        <div className="landing-service-row">
+          <strong>01</strong>
+          <h3>See the posture</h3>
+          <p>Live device, framework, severity, and compliance views grounded in your saved analyses.</p>
+          <button type="button" className="icon-link" onClick={() => navigate('/dashboard')} aria-label="Open dashboard"><ArrowRight size={18} /></button>
+        </div>
+        <div className="landing-service-row">
+          <strong>02</strong>
+          <h3>Find what matters</h3>
+          <p>Investigate findings with evidence, risk context, references, and vendor-aware recommendations.</p>
+          <button type="button" className="icon-link" onClick={() => navigate('/findings')} aria-label="Open findings"><ArrowRight size={18} /></button>
+        </div>
+        <div className="landing-service-row">
+          <strong>03</strong>
+          <h3>Move with confidence</h3>
+          <p>Review remediation commands, export reports, and teach the parser when your environment evolves.</p>
+          <button type="button" className="icon-link" onClick={() => navigate('/remediation')} aria-label="Open remediation"><ArrowRight size={18} /></button>
+        </div>
+      </section>
+
+      <section className="landing-close">
+        <p className="eyebrow">Start with what you have</p>
+        <h2>Your network already has a story.<br /><em>Let’s make it legible.</em></h2>
+        <button type="button" className="primary-button" onClick={() => navigate('/configuration')}>Upload a configuration <UploadCloud size={16} /></button>
+      </section>
     </div>
   )
 }
@@ -705,6 +1088,7 @@ function ConfigurationPage() {
   const [vendorOptionsState, setVendorOptions] = useState<string[]>(['Cisco'])
   const [vendor, setVendor] = useState(vendorOptionsState[0] ?? 'Cisco')
   const [analysisDepth, setAnalysisDepth] = useState('Standard')
+  const [inventory, setInventory] = useState({ model: '', serial: '', ipAddress: '' })
 
   const handleFileUpload = (incomingFiles: FileList | File[]) => {
     const nextFiles = Array.from(incomingFiles)
@@ -718,11 +1102,12 @@ function ConfigurationPage() {
       return
     }
 
-    const file = files[0]
     try {
-      const { job, result } = await startAnalysis(file, vendor, framework)
-      showToast(`Analysis complete for ${file.name}`, 'success')
-      navigate(`/analysis/${job.id || result.id}`)
+      const analyses = files.length > 1
+        ? await startAnalysisBatch(files, vendor, framework, inventory)
+        : [await startAnalysis(files[0], vendor, framework, inventory).then(({ result }) => result)]
+      showToast(`${analyses.length} analysis${analyses.length === 1 ? '' : 'es'} complete`, 'success')
+      navigate(`/analysis/${analyses[0].id}`)
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Analysis could not be completed.', 'warning')
     }
@@ -780,6 +1165,18 @@ function ConfigurationPage() {
               <option value="Deep">Deep</option>
               <option value="Threat-Focused">Threat-Focused</option>
             </select>
+          </label>
+          <label>
+            <span>Device model (optional)</span>
+            <input value={inventory.model} onChange={(event) => setInventory((current) => ({ ...current, model: event.target.value }))} placeholder="From configuration if blank" />
+          </label>
+          <label>
+            <span>Serial number (optional)</span>
+            <input value={inventory.serial} onChange={(event) => setInventory((current) => ({ ...current, serial: event.target.value }))} placeholder="From configuration if available" />
+          </label>
+          <label>
+            <span>Management IP (optional)</span>
+            <input value={inventory.ipAddress} onChange={(event) => setInventory((current) => ({ ...current, ipAddress: event.target.value }))} placeholder="From configuration if available" />
           </label>
         </div>
 
@@ -1215,9 +1612,19 @@ function RemediationPage() {
 
 function TrainingPage() {
   const [items, setItems] = useState<TrainingItem[]>([])
+  const [unknownLines, setUnknownLines] = useState<{ id: string; label: string; command: string }[]>([])
   const { showToast } = useOutletContext<LayoutContext>()
 
-  useEffect(() => { getTrainingItems().then((res) => setItems(res as TrainingItem[])).catch(() => {}) }, [])
+  useEffect(() => {
+    getTrainingItems().then((res) => setItems(res as TrainingItem[])).catch(() => {})
+    getLiveAnalyses().then((analyses) => {
+      setUnknownLines(analyses.flatMap((analysis: any) => (analysis.unknownLines ?? []).map((command: string, index: number) => ({
+        id: `${analysis.id}-${index}`,
+        label: `${analysis.fileName}: ${command}`,
+        command,
+      }))))
+    }).catch(() => {})
+  }, [])
   const [form, setForm] = useState({
     command: 'set management access legacy-protocol enable',
     vendor: 'Unknown Vendor',
@@ -1266,6 +1673,11 @@ function TrainingPage() {
         <h3>UNKNOWN CONFIGURATION</h3>
         <div className="unknown-box">
           <p>Raw command:</p>
+          {unknownLines.length ? (
+            <select value={form.command} onChange={(event) => setForm((current) => ({ ...current, command: event.target.value }))} aria-label="Unknown configuration line">
+              {unknownLines.map((item) => <option key={item.id} value={item.command}>{item.label}</option>)}
+            </select>
+          ) : null}
           <input value={form.command} onChange={(event) => setForm((current) => ({ ...current, command: event.target.value }))} aria-label="Raw unknown command" />
         </div>
 
@@ -1816,7 +2228,8 @@ function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<DashboardPage />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/devices" element={<DevicesPage />} />
         <Route path="/devices/:id" element={<DeviceDetailsPage />} />
         <Route path="/configuration" element={<ConfigurationPage />} />

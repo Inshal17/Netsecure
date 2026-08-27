@@ -14,9 +14,11 @@ The local SQLite database is no longer used for application data.
 from __future__ import annotations
 
 import io
+import importlib
 import json
 import os
 import re
+import sqlite3
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -38,7 +40,11 @@ from reportlab.platypus import (
     Table,
     TableStyle,
 )
-from supabase import create_client
+
+try:
+    create_client = importlib.import_module("supabase").create_client
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    create_client = None
 
 
 # ============================================================
@@ -59,7 +65,7 @@ SUPABASE_BUCKET = os.getenv(
 
 supabase = None
 
-if SUPABASE_URL and SUPABASE_SECRET_KEY:
+if create_client is not None and SUPABASE_URL and SUPABASE_SECRET_KEY:
     supabase = create_client(
         SUPABASE_URL,
         SUPABASE_SECRET_KEY,
@@ -75,6 +81,7 @@ DATA_DIR.mkdir(exist_ok=True)
 
 UPLOADS_DIR = DATA_DIR / "uploads"
 UPLOADS_DIR.mkdir(exist_ok=True)
+LOCAL_DB = DATA_DIR / "netsecureai.sqlite3"
 
 
 # ============================================================
@@ -112,16 +119,26 @@ def now() -> str:
 
 
 def require_supabase():
-    if supabase is None:
+    if supabase is None or create_client is None:
         raise HTTPException(
             status_code=500,
             detail=(
-                "Supabase is not configured. "
-                "Check backend/.env"
+                "Supabase is not configured or the optional "
+                "Supabase dependency is unavailable. "
+                "Check backend/.env and install the project requirements."
             ),
         )
 
     return supabase
+
+
+def local_rows(query: str, parameters: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
+    if not LOCAL_DB.exists():
+        return []
+
+    with sqlite3.connect(LOCAL_DB) as connection:
+        connection.row_factory = sqlite3.Row
+        return [dict(row) for row in connection.execute(query, parameters)]
 
 
 # ============================================================
@@ -216,6 +233,69 @@ CONTROL_CATALOG = [
         "Medium",
         "Session Security",
     ),
+    (
+        "source_routing_disabled",
+        "Disable IP source routing",
+        True,
+        "High",
+        "Routing Security",
+    ),
+    (
+        "proxy_arp_disabled",
+        "Disable proxy ARP on interfaces",
+        True,
+        "Medium",
+        "Interface Security",
+    ),
+    (
+        "tcp_keepalives_enabled",
+        "Enable TCP keepalives",
+        True,
+        "Low",
+        "Transport Security",
+    ),
+    (
+        "pad_disabled",
+        "Disable PAD service",
+        True,
+        "Medium",
+        "Legacy Services",
+    ),
+    (
+        "ntp_authenticated",
+        "Authenticate NTP synchronization",
+        True,
+        "Medium",
+        "Time Synchronization",
+    ),
+    (
+        "ssh_rate_limit",
+        "Limit SSH connection attempts",
+        4,
+        "Medium",
+        "Management Access",
+    ),
+    (
+        "login_attempts",
+        "Limit failed login attempts",
+        3,
+        "High",
+        "Authentication",
+    ),
+    (
+        "reverse_telnet_disabled",
+        "Disable reverse Telnet",
+        True,
+        "High",
+        "Legacy Services",
+    ),
+    (
+        "ftp_disabled",
+        "Disable insecure FTP service",
+        True,
+        "High",
+        "Legacy Services",
+    ),
 ]
 
 
@@ -261,6 +341,21 @@ REMEDIATIONS = {
 
         "idle_timeout":
             "line vty 0 15\n exec-timeout 10 0",
+
+        "source_routing_disabled":
+            "no ip source-route",
+
+        "proxy_arp_disabled":
+            "interface <interface>\n no ip proxy-arp",
+
+        "tcp_keepalives_enabled":
+            "service tcp-keepalives-in\nservice tcp-keepalives-out",
+
+        "pad_disabled":
+            "no service pad",
+
+        "ntp_authenticated":
+            "ntp authenticate",
     },
 
     "Fortinet": {
@@ -308,6 +403,18 @@ REMEDIATIONS = {
 
         "idle_timeout":
             "set system login class <class> idle-timeout 10",
+
+        "ssh_rate_limit":
+            "set system services ssh rate-limit 4",
+
+        "login_attempts":
+            "set system login retry-options tries-before-disconnect 3",
+
+        "reverse_telnet_disabled":
+            "delete system services reverse-telnet",
+
+        "ftp_disabled":
+            "delete system services ftp",
     },
 }
 
@@ -357,6 +464,8 @@ def detect_vendor(
     if (
         "set system" in lower
         or "junos:" in lower
+        or "protocol-version v" in lower
+        or "tries-before-disconnect" in lower
     ):
         return "Juniper"
 
@@ -517,6 +626,10 @@ def parse_known(
 
                 recognized.add(text)
 
+            elif lower == "no logging enable":
+                set_field(baseline, "logging_enabled", False, text, 100, "deterministic")
+                recognized.add(text)
+
             elif lower.startswith(
                 (
                     "ntp server ",
@@ -594,6 +707,46 @@ def parse_known(
                     "deterministic",
                 )
 
+                recognized.add(text)
+
+            elif lower == "no ip source-route":
+                set_field(baseline, "source_routing_disabled", True, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower == "ip source-route":
+                set_field(baseline, "source_routing_disabled", False, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower == "no ip proxy-arp":
+                set_field(baseline, "proxy_arp_disabled", True, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower == "ip proxy-arp":
+                set_field(baseline, "proxy_arp_disabled", False, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower in {"service tcp-keepalives-in", "service tcp-keepalives-out"}:
+                set_field(baseline, "tcp_keepalives_enabled", True, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower in {"no service tcp-keepalives-in", "no service tcp-keepalives-out"}:
+                set_field(baseline, "tcp_keepalives_enabled", False, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower == "no service pad":
+                set_field(baseline, "pad_disabled", True, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower == "service pad":
+                set_field(baseline, "pad_disabled", False, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower == "ntp authenticate":
+                set_field(baseline, "ntp_authenticated", True, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower == "no ntp authenticate":
+                set_field(baseline, "ntp_authenticated", False, text, 100, "deterministic")
                 recognized.add(text)
 
         # ----------------------------------------------------
@@ -771,6 +924,86 @@ def parse_known(
 
                 recognized.add(text)
 
+            elif lower.startswith("set system services ssh") and "rate-limit" in lower:
+                match = re.search(r"rate-limit\s+(\d+)", lower)
+                if match:
+                    set_field(baseline, "ssh_rate_limit", int(match.group(1)), text, 100, "deterministic")
+                    recognized.add(text)
+
+            elif lower.startswith("set system login retry-options"):
+                match = re.search(r"tries-before-disconnect\s+(\d+)", lower)
+                if match:
+                    set_field(baseline, "login_attempts", int(match.group(1)), text, 100, "deterministic")
+                    recognized.add(text)
+
+            elif lower.startswith("set system services reverse-telnet"):
+                set_field(baseline, "reverse_telnet_disabled", False, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower.startswith("delete system services reverse-telnet"):
+                set_field(baseline, "reverse_telnet_disabled", True, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower.startswith("set system services ftp"):
+                set_field(baseline, "ftp_disabled", False, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower.startswith("delete system services ftp"):
+                set_field(baseline, "ftp_disabled", True, text, 100, "deterministic")
+                recognized.add(text)
+
+    if vendor == "Juniper":
+        protocol = re.search(r"protocol-version\s+(v[12])\s*;", config.lower())
+        if protocol:
+            set_field(
+                baseline,
+                "ssh_version",
+                protocol.group(1)[1:],
+                protocol.group(0),
+                100,
+                "deterministic",
+            )
+            recognized.add(protocol.group(0))
+
+        rate_limit = re.search(r"rate-limit\s+(\d+)\s*;", config.lower())
+        if rate_limit:
+            set_field(baseline, "ssh_rate_limit", int(rate_limit.group(1)), rate_limit.group(0), 100, "deterministic")
+            recognized.add(rate_limit.group(0))
+
+        attempts = re.search(r"tries-before-disconnect\s+(\d+)\s*;", config.lower())
+        if attempts:
+            set_field(baseline, "login_attempts", int(attempts.group(1)), attempts.group(0), 100, "deterministic")
+            recognized.add(attempts.group(0))
+
+        telnet = re.search(r"(?m)^\s*telnet\s*;", config.lower())
+        set_field(
+            baseline,
+            "telnet_disabled",
+            not bool(telnet),
+            "telnet service absent" if not telnet else telnet.group(0).strip(),
+            100,
+            "deterministic",
+        )
+
+        reverse_telnet = "reverse-telnet" in config.lower()
+        ftp = re.search(r"(?m)^\s*ftp\s*;", config.lower())
+        set_field(
+            baseline,
+            "reverse_telnet_disabled",
+            not reverse_telnet,
+            "reverse-telnet service absent" if not reverse_telnet else "reverse-telnet;",
+            100,
+            "deterministic",
+        )
+        set_field(
+            baseline,
+            "ftp_disabled",
+            not bool(ftp),
+            "ftp service absent" if not ftp else ftp.group(0).strip(),
+            100,
+            "deterministic",
+        )
+
     return recognized
 
 
@@ -782,16 +1015,16 @@ def get_training_mappings(
     vendor: str,
 ) -> list[dict[str, Any]]:
 
-    client = require_supabase()
-
-    response = (
-        client
-        .table("mappings")
-        .select("*")
-        .execute()
-    )
-
-    mappings = response.data or []
+    if supabase is not None:
+        response = (
+            supabase
+            .table("mappings")
+            .select("*")
+            .execute()
+        )
+        mappings = response.data or []
+    else:
+        mappings = local_rows("SELECT * FROM mappings")
 
     return [
         row
@@ -1062,6 +1295,33 @@ def analyze(
         Path(filename).stem,
     )
 
+    ip_address = next(
+        (
+            match.group(1)
+            for line in config.splitlines()
+            if (match := re.search(r"(?:\bip address\s+|\baddress\s+)(\d{1,3}(?:\.\d{1,3}){3})\b", line, re.I))
+        ),
+        "Not detected",
+    )
+
+    serial_number = next(
+        (
+            match.group(1)
+            for line in config.splitlines()
+            if (match := re.search(r"\b(?:serial(?:-number)?|chassis\s+serial)\s+[:=]?\s*([\w.-]+)", line, re.I))
+        ),
+        "Not detected",
+    )
+
+    model = next(
+        (
+            match.group(1).strip()
+            for line in config.splitlines()
+            if (match := re.search(r"^\s*model\s+(.+)$", line, re.I))
+        ),
+        "Not detected",
+    )
+
     firmware = next(
         (
             line.split(
@@ -1091,10 +1351,11 @@ def analyze(
 
         "device": {
             "name": hostname,
-            "model": "Not detected",
+            "model": model,
             "firmware": firmware,
-            "serialNumber":
-                "Not available in configuration",
+            "serialNumber": serial_number,
+            "ipAddress": ip_address,
+            "deviceType": "Router" if vendor in {"Cisco", "Juniper"} else "Network device",
         },
 
         "overallScore": score,
@@ -1168,6 +1429,10 @@ def normalize_device(
                     "serialNumber",
                     "Not available",
                 ),
+
+            "ipAddress": device.get("ipAddress", "Not detected"),
+
+            "deviceType": device.get("deviceType", "Network device"),
         }
 
     name = (
@@ -1188,6 +1453,10 @@ def normalize_device(
 
         "serialNumber":
             "Not available",
+
+        "ipAddress": "Not detected",
+
+        "deviceType": "Network device",
     }
 
 
@@ -1200,10 +1469,6 @@ def health() -> dict[str, Any]:
 
     return {
         "status": "operational",
-        "supabase_configured":
-            supabase is not None,
-        "bucket":
-            SUPABASE_BUCKET,
     }
 
 
@@ -1239,9 +1504,12 @@ async def upload_analysis(
     vendor: str = Form(
         "Auto"
     ),
+    device_model: str = Form(""),
+    device_serial: str = Form(""),
+    device_ip: str = Form(""),
 ) -> dict[str, Any]:
 
-    client = require_supabase()
+    client = supabase
 
     filename = (
         file.filename
@@ -1287,6 +1555,13 @@ async def upload_analysis(
         vendor,
     )
 
+    if device_model.strip():
+        result["device"]["model"] = device_model.strip()
+    if device_serial.strip():
+        result["device"]["serialNumber"] = device_serial.strip()
+    if device_ip.strip():
+        result["device"]["ipAddress"] = device_ip.strip()
+
     analysis_id = result["id"]
 
     # Storage filename
@@ -1294,6 +1569,38 @@ async def upload_analysis(
         f"{analysis_id}_"
         f"{Path(filename).name}"
     )
+
+    upload_url = (
+        f"/api/analyses/"
+        f"{analysis_id}/raw"
+    )
+
+    if client is None:
+        try:
+            (UPLOADS_DIR / stored_name).write_bytes(raw.encode("utf-8"))
+            with sqlite3.connect(LOCAL_DB) as connection:
+                connection.execute(
+                    """
+                    INSERT INTO analyses
+                    (id, filename, vendor, framework, created_at, result_json, upload_url)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        result["id"],
+                        result["fileName"],
+                        result["vendor"],
+                        result["framework"],
+                        result["createdAt"],
+                        json.dumps(result),
+                        upload_url,
+                    ),
+                )
+                connection.commit()
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=f"Could not save local analysis: {exc}")
+
+        result["upload_url"] = upload_url
+        return result
 
     # --------------------------------------------------------
     # SUPABASE STORAGE
@@ -1333,11 +1640,6 @@ async def upload_analysis(
                 f"{exc}"
             ),
         )
-
-    upload_url = (
-        f"/api/analyses/"
-        f"{analysis_id}/raw"
-    )
 
     # --------------------------------------------------------
     # SUPABASE DATABASE
@@ -1432,6 +1734,31 @@ async def upload_configuration(
     )
 
 
+@app.post("/api/analyses/upload-batch")
+async def upload_analysis_batch(
+    files: list[UploadFile] = File(...),
+    framework: str = Form("CIS Benchmarks"),
+    vendor: str = Form("Auto"),
+    device_model: str = Form(""),
+    device_serial: str = Form(""),
+    device_ip: str = Form(""),
+) -> list[dict[str, Any]]:
+    if not files:
+        raise HTTPException(status_code=400, detail="At least one configuration file is required.")
+
+    return [
+        await upload_analysis(
+            file=file,
+            framework=framework,
+            vendor=vendor,
+            device_model=device_model,
+            device_serial=device_serial,
+            device_ip=device_ip,
+        )
+        for file in files
+    ]
+
+
 # ============================================================
 # DOWNLOAD ORIGINAL CONFIGURATION
 # ============================================================
@@ -1442,6 +1769,27 @@ async def upload_configuration(
 def download_raw_analysis(
     analysis_id: str,
 ):
+
+    if supabase is None:
+        analyses = local_rows(
+            "SELECT filename FROM analyses WHERE id = ? LIMIT 1",
+            (analysis_id,),
+        )
+        if not analyses:
+            raise HTTPException(status_code=404, detail="Analysis not found")
+
+        filename = Path(analyses[0].get("filename") or "configuration.txt").name
+        local_path = UPLOADS_DIR / f"{analysis_id}_{filename}"
+        if not local_path.exists():
+            raise HTTPException(status_code=404, detail="Raw configuration not found")
+
+        return StreamingResponse(
+            io.BytesIO(local_path.read_bytes()),
+            media_type="text/plain",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+            },
+        )
 
     client = require_supabase()
 
@@ -1520,36 +1868,43 @@ def download_raw_analysis(
 
 def all_analyses() -> list[dict[str, Any]]:
 
-    client = require_supabase()
-
-    response = (
-        client
-        .table("analyses")
-        .select(
+    if supabase is not None:
+        response = (
+            supabase
+            .table("analyses")
+            .select(
+                """
+                id,
+                filename,
+                vendor,
+                framework,
+                created_at,
+                result_json,
+                upload_url
+                """
+            )
+            .order(
+                "created_at",
+                desc=True,
+            )
+            .execute()
+        )
+        rows = response.data or []
+    else:
+        rows = local_rows(
             """
-            id,
-            filename,
-            vendor,
-            framework,
-            created_at,
-            result_json,
-            upload_url
+            SELECT id, filename, vendor, framework, created_at,
+                   result_json, upload_url
+            FROM analyses
+            ORDER BY created_at DESC
             """
         )
-        .order(
-            "created_at",
-            desc=True,
-        )
-        .execute()
-    )
 
     output: list[
         dict[str, Any]
     ] = []
 
-    for row in (
-        response.data or []
-    ):
+    for row in rows:
 
         result = row.get(
             "result_json"
@@ -1878,10 +2233,10 @@ def devices() -> list[
                     device["firmware"],
 
                 "ipAddress":
-                    "Not collected",
+                    device.get("ipAddress", "Not detected"),
 
                 "deviceType":
-                    "Network device",
+                    device.get("deviceType", "Network device"),
 
                 "complianceScore":
                     score,
@@ -1899,7 +2254,7 @@ def devices() -> list[
                     status,
 
                 "location":
-                    "Not collected",
+                    "Not detected",
             }
         )
 
@@ -2133,6 +2488,15 @@ def get_analysis(
     analysis_id: str,
 ) -> dict[str, Any]:
 
+    if supabase is None:
+        analysis = next(
+            (item for item in all_analyses() if item.get("id") == analysis_id),
+            None,
+        )
+        if analysis is None:
+            raise HTTPException(status_code=404, detail="Analysis not found")
+        return analysis
+
     client = require_supabase()
 
     response = (
@@ -2194,6 +2558,9 @@ def list_mappings() -> list[
     dict[str, Any]
 ]:
 
+    if supabase is None:
+        return local_rows("SELECT * FROM mappings ORDER BY created_at DESC")
+
     client = require_supabase()
 
     response = (
@@ -2248,8 +2615,6 @@ def create_mapping(
     payload: TrainingMapping,
 ) -> dict[str, Any]:
 
-    client = require_supabase()
-
     valid_fields = {
         item[0]
         for item in CONTROL_CATALOG
@@ -2297,6 +2662,30 @@ def create_mapping(
             now(),
     }
 
+    if supabase is None:
+        with sqlite3.connect(LOCAL_DB) as connection:
+            connection.execute(
+                """
+                INSERT INTO mappings
+                (id, raw_command, vendor, field_name, observed_value, meaning, confidence, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    record["id"],
+                    record["raw_command"],
+                    record["vendor"],
+                    record["field_name"],
+                    json.dumps(record["observed_value"]),
+                    record["meaning"],
+                    record["confidence"],
+                    record["created_at"],
+                ),
+            )
+            connection.commit()
+        return record
+
+    client = require_supabase()
+
     try:
 
         client \
@@ -2325,6 +2714,46 @@ def create_mapping(
     "/api/training-mappings/apply"
 )
 def apply_mappings_endpoint() -> dict[str, Any]:
+
+    if supabase is None:
+        updated = 0
+        for stored in all_analyses():
+            analysis_id = stored.get("id")
+            filename = stored.get("fileName", f"{analysis_id}.cfg")
+            local_path = UPLOADS_DIR / f"{analysis_id}_{Path(filename).name}"
+            if not analysis_id or not local_path.exists():
+                continue
+
+            try:
+                new_result = analyze(
+                    filename,
+                    redact(local_path.read_text(encoding="utf-8", errors="replace")),
+                    stored.get("framework", "CIS Benchmarks"),
+                    stored.get("vendor", "Auto"),
+                )
+                new_result["id"] = analysis_id
+                new_result["upload_url"] = stored.get("upload_url")
+                with sqlite3.connect(LOCAL_DB) as connection:
+                    connection.execute(
+                        """
+                        UPDATE analyses
+                        SET vendor = ?, framework = ?, created_at = ?, result_json = ?
+                        WHERE id = ?
+                        """,
+                        (
+                            new_result["vendor"],
+                            new_result["framework"],
+                            new_result["createdAt"],
+                            json.dumps(new_result),
+                            analysis_id,
+                        ),
+                    )
+                    connection.commit()
+                updated += 1
+            except Exception as exc:
+                print(f"Could not re-analyze {analysis_id}: {exc}")
+
+        return {"updated": updated}
 
     client = require_supabase()
 
