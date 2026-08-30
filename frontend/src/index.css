@@ -1,45 +1,48 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 /* =========================================================================
-   NetSecureAI — dark-first design tokens, with a light theme override.
-   Default (no data-theme attribute, or data-theme="dark"): deep navy canvas,
-   soft glowing blue/teal accents. data-theme="light": bright, airy variant.
+   NetSecureAI — design tokens.
+   Palette idea: a matte charcoal-navy canvas (not pure black) with a single
+   warm amber/orange accent doing all the "brand" work — buttons, active
+   states, focus rings, the compliance ring. No glass blur, no colored glow,
+   no shine — flat surfaces, quiet borders, one confident accent color.
+   Default: dark. data-theme="light": bright neutral variant, same accent.
    ========================================================================= */
 
 :root,
 :root[data-theme='dark'] {
-  --void: #0a0d16;
-  --surface: #12172a;
-  --surface-alt: #171e35;
-  --surface-soft: #0e1322;
-  --border: rgba(148, 168, 210, 0.14);
-  --border-strong: rgba(148, 168, 210, 0.22);
-  --ink: #eef1fb;
-  --slate: #93a1c2;
-  --subtle: #5f6c8a;
+  --void: #14161c;
+  --surface: #1b1e26;
+  --surface-alt: #232631;
+  --surface-soft: #191c23;
+  --border: rgba(231, 228, 222, 0.1);
+  --border-strong: rgba(231, 228, 222, 0.18);
+  --ink: #f1efe9;
+  --slate: #99a0ad;
+  --subtle: #5e6470;
 
-  --signal: #5b8cff;
-  --signal-strong: #82a6ff;
-  --blue-soft: rgba(91, 140, 255, 0.14);
+  --signal: #ff8a3d;
+  --signal-strong: #ff7024;
+  --blue-soft: rgba(255, 138, 61, 0.14);
 
-  --guard: #2fd6ac;
-  --guard-soft: rgba(47, 214, 172, 0.14);
-  --purple: #a78bfa;
-  --purple-soft: rgba(167, 139, 250, 0.14);
+  --guard: #3fb98a;
+  --guard-soft: rgba(63, 185, 138, 0.14);
+  --purple: #7c8aa8;
+  --purple-soft: rgba(124, 138, 168, 0.16);
 
-  --success-bg: rgba(47, 214, 172, 0.14);
-  --success-text: #4fe3bd;
-  --warning-bg: rgba(245, 176, 66, 0.14);
-  --warning-text: #f4b95a;
-  --danger-bg: rgba(255, 106, 106, 0.14);
-  --danger-text: #ff8a8a;
-  --info-bg: rgba(91, 140, 255, 0.14);
-  --info-text: #9db8ff;
+  --success-bg: rgba(63, 185, 138, 0.14);
+  --success-text: #5cd1a3;
+  --warning-bg: rgba(242, 174, 76, 0.14);
+  --warning-text: #f2ae4c;
+  --danger-bg: rgba(235, 99, 90, 0.14);
+  --danger-text: #f18276;
+  --info-bg: rgba(124, 148, 196, 0.16);
+  --info-text: #a9bee0;
 
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-2: 0 12px 28px -8px rgba(0, 0, 0, 0.45);
-  --shadow-3: 0 28px 56px -14px rgba(0, 0, 0, 0.55);
-  --glow-signal: 0 0 0 1px rgba(91, 140, 255, 0.18), 0 8px 22px rgba(91, 140, 255, 0.16);
+  --shadow-2: 0 8px 20px -6px rgba(0, 0, 0, 0.38);
+  --shadow-3: 0 20px 42px -12px rgba(0, 0, 0, 0.48);
+  --ring-signal: 0 0 0 1px rgba(255, 138, 61, 0.4);
 
   --bg: var(--void);
   --panel: var(--surface);
@@ -51,38 +54,38 @@
 }
 
 :root[data-theme='light'] {
-  --void: #f5f7fc;
+  --void: #f3f1ec;
   --surface: #ffffff;
-  --surface-alt: #eef1f9;
-  --surface-soft: #fbfcff;
-  --border: rgba(18, 24, 43, 0.08);
-  --border-strong: rgba(18, 24, 43, 0.14);
-  --ink: #12182b;
-  --slate: #5c6786;
-  --subtle: #99a3ba;
+  --surface-alt: #f2efe8;
+  --surface-soft: #faf8f4;
+  --border: rgba(30, 26, 20, 0.09);
+  --border-strong: rgba(30, 26, 20, 0.15);
+  --ink: #1d1b17;
+  --slate: #6b6558;
+  --subtle: #a19a8b;
 
-  --signal: #3b6fed;
-  --signal-strong: #2450c4;
-  --blue-soft: rgba(59, 111, 237, 0.09);
+  --signal: #e0631a;
+  --signal-strong: #c14f0f;
+  --blue-soft: rgba(224, 99, 26, 0.1);
 
-  --guard: #16a679;
-  --guard-soft: rgba(22, 166, 121, 0.1);
-  --purple: #7c5cf0;
-  --purple-soft: #efeaff;
+  --guard: #1e8f66;
+  --guard-soft: rgba(30, 143, 102, 0.1);
+  --purple: #6b7385;
+  --purple-soft: rgba(107, 115, 133, 0.12);
 
-  --success-bg: rgba(22, 166, 121, 0.11);
-  --success-text: #0d7a58;
-  --warning-bg: rgba(217, 130, 15, 0.11);
-  --warning-text: #a35b0a;
-  --danger-bg: rgba(224, 62, 62, 0.09);
-  --danger-text: #b8342f;
-  --info-bg: rgba(59, 111, 237, 0.1);
-  --info-text: #2450c4;
+  --success-bg: rgba(30, 143, 102, 0.1);
+  --success-text: #1a7a58;
+  --warning-bg: rgba(196, 128, 15, 0.12);
+  --warning-text: #9c6008;
+  --danger-bg: rgba(196, 62, 47, 0.1);
+  --danger-text: #ad3a26;
+  --info-bg: rgba(107, 115, 133, 0.12);
+  --info-text: #545b6b;
 
-  --shadow-1: 0 1px 2px rgba(18, 24, 43, 0.05);
-  --shadow-2: 0 10px 24px -6px rgba(18, 24, 43, 0.1);
-  --shadow-3: 0 24px 48px -12px rgba(18, 24, 43, 0.16);
-  --glow-signal: 0 0 0 1px rgba(59, 111, 237, 0.14), 0 8px 20px rgba(59, 111, 237, 0.12);
+  --shadow-1: 0 1px 2px rgba(30, 26, 20, 0.05);
+  --shadow-2: 0 8px 20px -6px rgba(30, 26, 20, 0.09);
+  --shadow-3: 0 20px 42px -12px rgba(30, 26, 20, 0.14);
+  --ring-signal: 0 0 0 1px rgba(224, 99, 26, 0.3);
 
   --bg: var(--void);
   --panel: var(--surface);
@@ -94,16 +97,15 @@
 }
 
 :root {
-  --radius: 16px;
-  --radius-sm: 10px;
-  --radius-lg: 22px;
+  --radius: 14px;
+  --radius-sm: 9px;
+  --radius-lg: 18px;
 
   --font-display: 'Space Grotesk', 'Inter', 'Segoe UI', sans-serif;
   --font-body: 'Inter', 'Segoe UI', Arial, sans-serif;
   --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   font-family: var(--font-body);
   line-height: 1.5;
@@ -121,7 +123,6 @@
 html {
   background: var(--bg);
   scroll-behavior: smooth;
-  transition: background 0.25s ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -142,13 +143,7 @@ body {
   margin: 0;
   min-width: 320px;
   color: var(--text);
-  background:
-    radial-gradient(60vw 55vh at -8% -10%, var(--blue-soft), transparent 60%),
-    radial-gradient(55vw 55vh at 108% 0%, var(--purple-soft), transparent 55%),
-    radial-gradient(55vw 55vh at 100% 100%, var(--guard-soft), transparent 55%),
-    var(--bg);
-  background-attachment: fixed;
-  transition: background 0.25s ease, color 0.25s ease;
+  background: var(--bg);
 }
 
 button,
@@ -199,8 +194,8 @@ svg {
 }
 
 ::selection {
-  background: rgba(91, 140, 255, 0.28);
-  color: #fff;
+  background: rgba(255, 138, 61, 0.28);
+  color: #1d1b17;
 }
 
 a:focus-visible,

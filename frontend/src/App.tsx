@@ -35,6 +35,7 @@ import {
   YAxis,
 } from 'recharts'
 import {
+  Navigate,
   NavLink,
   Outlet,
   Route,
@@ -44,6 +45,11 @@ import {
   useOutletContext,
   useParams,
 } from 'react-router-dom'
+
+import LandingPage from './Landingpage'
+import LoginPage from './Loginpage'
+import RegisterPage from './Registerpage'
+import { isAuthenticated, logout } from './auth'
 
 import {
   getAnalysisJobs,
@@ -243,6 +249,14 @@ function SectionHeader({ title, actions, icon: Icon }: { title: string; actions?
   )
 }
 
+function ProtectedRoute() {
+  const location = useLocation()
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" state={{ from: location }} replace />
+  }
+  return <Outlet />
+}
+
 function Layout() {
   const [searchTerm, setSearchTerm] = useState('')
   const [toasts, setToasts] = useState<Toast[]>([])
@@ -311,8 +325,13 @@ function Layout() {
     }, 3200)
   }
 
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+
   const pageTitleMap: Record<string, string> = {
-    '/': 'Network Security Posture',
+    '/dashboard': 'Network Security Posture',
     '/devices': 'Network Devices',
     '/configuration': 'Configuration Ingestion',
     '/analysis': 'Analysis Pipeline',
@@ -327,7 +346,7 @@ function Layout() {
   }
 
   const pageDescriptionMap: Record<string, string> = {
-    '/': 'Monitor configuration compliance across your network infrastructure.',
+    '/dashboard': 'Monitor configuration compliance across your network infrastructure.',
     '/devices': 'Manage monitored infrastructure and compliance posture.',
     '/configuration': 'Upload network device configurations for automated security analysis.',
     '/analysis': 'Track staged validation across normalization and compliance checks.',
@@ -348,7 +367,7 @@ function Layout() {
   const navGroups: { label: string; items: { to: string; label: string; icon: LucideIcon }[] }[] = [
     {
       label: 'Overview',
-      items: [{ to: '/', label: 'Dashboard', icon: Activity }],
+      items: [{ to: '/dashboard', label: 'Dashboard', icon: Activity }],
     },
     {
       label: 'Operations',
@@ -434,7 +453,7 @@ function Layout() {
               <div className="nav-group" key={group.label}>
                 <p className="nav-group-label">{group.label}</p>
                 {group.items.map(({ to, label, icon: Icon }) => (
-                  <NavLink key={to} to={to} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} end={to === '/'} title={label}>
+                  <NavLink key={to} to={to} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} end={to === '/dashboard'} title={label}>
                     <Icon size={16} />
                     <span>{label}</span>
                   </NavLink>
@@ -502,10 +521,10 @@ function Layout() {
                 <span className="status-dot" />
                 Operational
               </div>
-              <div className="profile-pill">
+              <button type="button" className="profile-pill" onClick={handleLogout} title="Sign out">
                 <UserCircle size={18} />
                 <span>Admin</span>
-              </div>
+              </button>
             </div>
           </div>
 
@@ -641,15 +660,20 @@ function DashboardPage() {
               <AreaChart data={dashboard.trend}>
                 <defs>
                   <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#93c5fd" stopOpacity={0.28} />
-                    <stop offset="100%" stopColor="#93c5fd" stopOpacity={0.04} />
+                    <stop offset="0%" stopColor="#ff8a3d" stopOpacity={0.32} />
+                    <stop offset="100%" stopColor="#ff8a3d" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid stroke="#dfe7ef" strokeDasharray="4 4" />
-                <XAxis dataKey="name" stroke="#64748b" />
-                <YAxis domain={[50, 100]} stroke="#64748b" />
-                <Tooltip />
-                <Area type="monotone" dataKey="score" stroke="#2563eb" fill="url(#scoreFill)" strokeWidth={3} />
+                <CartesianGrid stroke="#2a2d36" strokeDasharray="4 4" />
+                <XAxis dataKey="name" stroke="#6b7180" />
+                <YAxis domain={[50, 100]} stroke="#6b7180" />
+                <Tooltip
+                  contentStyle={{ background: 'var(--panel)', border: '1px solid var(--border-strong)', borderRadius: 8, color: 'var(--ink)', fontSize: 12 }}
+                                    labelStyle={{ color: 'var(--muted)', marginBottom: 4 }}
+                                    itemStyle={{ color: 'var(--ink)' }}
+                                    cursor={{ fill: 'var(--panel-alt)' }}
+                />
+                <Area type="monotone" dataKey="score" stroke="#ff8a3d" fill="url(#scoreFill)" strokeWidth={2.5} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -660,13 +684,18 @@ function DashboardPage() {
           <div className="chart-box">
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={dashboard.severityBreakdown}>
-                <CartesianGrid stroke="#dfe7ef" strokeDasharray="4 4" />
-                <XAxis dataKey="name" stroke="#64748b" />
-                <YAxis stroke="#64748b" />
-                <Tooltip />
+                <CartesianGrid stroke="#2a2d36" strokeDasharray="4 4" />
+                <XAxis dataKey="name" stroke="#6b7180" />
+                <YAxis stroke="#6b7180" />
+                <Tooltip
+                  contentStyle={{ background: 'var(--panel)', border: '1px solid var(--border-strong)', borderRadius: 8, color: 'var(--ink)', fontSize: 12 }}
+                                    labelStyle={{ color: 'var(--muted)', marginBottom: 4 }}
+                                    itemStyle={{ color: 'var(--ink)' }}
+                                    cursor={{ fill: 'var(--panel-alt)' }}
+                />
                 <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                   {dashboard.severityBreakdown.map((entry: any) => (
-                    <Cell key={entry.name} fill={entry.name === 'Critical' ? '#dc2626' : entry.name === 'High' ? '#f97316' : entry.name === 'Medium' ? '#d97706' : '#2563eb'} />
+                    <Cell key={entry.name} fill={entry.name === 'Critical' ? '#eb635a' : entry.name === 'High' ? '#ff8a3d' : entry.name === 'Medium' ? '#f2ae4c' : '#7c8aa8'} />
                   ))}
                 </Bar>
               </BarChart>
@@ -679,11 +708,16 @@ function DashboardPage() {
           <div className="chart-box">
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={dashboard.vendorCompliance} layout="vertical" margin={{ left: 10 }}>
-                <CartesianGrid stroke="#dfe7ef" strokeDasharray="4 4" />
-                <XAxis type="number" domain={[0, 100]} stroke="#64748b" />
-                <YAxis dataKey="name" type="category" width={110} stroke="#64748b" />
-                <Tooltip />
-                <Bar dataKey="score" radius={[0, 6, 6, 0]} fill="#60a5fa" />
+                <CartesianGrid stroke="#2a2d36" strokeDasharray="4 4" />
+                <XAxis type="number" domain={[0, 100]} stroke="#6b7180" />
+                <YAxis dataKey="name" type="category" width={110} stroke="#6b7180" />
+                <Tooltip
+                  contentStyle={{ background: 'var(--panel)', border: '1px solid var(--border-strong)', borderRadius: 8, color: 'var(--ink)', fontSize: 12 }}
+                                    labelStyle={{ color: 'var(--muted)', marginBottom: 4 }}
+                                    itemStyle={{ color: 'var(--ink)' }}
+                                    cursor={{ fill: 'var(--panel-alt)' }}
+                />
+                <Bar dataKey="score" radius={[0, 6, 6, 0]} fill="#ff8a3d" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -696,10 +730,15 @@ function DashboardPage() {
               <PieChart>
                 <Pie data={dashboard.frameworkComparison} dataKey="score" nameKey="name" innerRadius={42} outerRadius={76} paddingAngle={3}>
                   {dashboard.frameworkComparison.map((entry: any, index: number) => (
-                    <Cell key={entry.name} fill={['#60a5fa', '#93c5fd', '#d1d5db', '#cbd5e1'][index % 4]} />
+                    <Cell key={entry.name} fill={['#ff8a3d', '#f2ae4c', '#565b68', '#7c8aa8'][index % 4]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip
+                  contentStyle={{ background: 'var(--panel)', border: '1px solid var(--border-strong)', borderRadius: 8, color: 'var(--ink)', fontSize: 12 }}
+                                    labelStyle={{ color: 'var(--muted)', marginBottom: 4 }}
+                                    itemStyle={{ color: 'var(--ink)' }}
+                                    cursor={{ fill: 'var(--panel-alt)' }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -1342,7 +1381,7 @@ function FindingsPage() {
       {loadError ? <div className="empty-state">{loadError}</div> : null}
       <div className="summary-cards">
         {Object.entries(counts).map(([label, value]) => (
-          <div key={label} className="panel simple-card">
+          <div key={label} className={`panel simple-card severity-summary-${label.toLowerCase()}`}>
             <span>{label}</span>
             <strong>{value}</strong>
           </div>
@@ -1682,7 +1721,13 @@ function FrameworksPage() {
             <div className="framework-metrics">
               <div><span>Controls</span><strong>{framework.controls}</strong></div>
               <div><span>Active rules</span><strong>{framework.activeRules}</strong></div>
-              <div><span>Last updated</span><strong>{framework.lastUpdated}</strong></div>
+              <div>
+                <span>Last updated</span>
+                <strong className="framework-updated-value">
+                  <span>{new Date(framework.lastUpdated).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                  <span>{new Date(framework.lastUpdated).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                </strong>
+              </div>
             </div>
           </div>
         ))}
@@ -2119,22 +2164,28 @@ function CompliancePage() {
 function App() {
   return (
     <Routes>
-      <Route element={<Layout />}>
-        <Route path="/" element={<DashboardPage />} />
-        <Route path="/devices" element={<DevicesPage />} />
-        <Route path="/devices/:id" element={<DeviceDetailsPage />} />
-        <Route path="/configuration" element={<ConfigurationPage />} />
-        <Route path="/analysis" element={<AnalysisPage />} />
-        <Route path="/analysis/:id" element={<AnalysisDetailsPage />} />
-        <Route path="/compliance" element={<CompliancePage />} />
-        <Route path="/findings" element={<FindingsPage />} />
-        <Route path="/findings/:id" element={<FindingDetailsPage />} />
-        <Route path="/remediation" element={<RemediationPage />} />
-        <Route path="/training" element={<TrainingPage />} />
-        <Route path="/frameworks" element={<FrameworksPage />} />
-        <Route path="/reports" element={<ReportsPage />} />
-        <Route path="/audit-logs" element={<AuditLogsPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+
+      <Route element={<ProtectedRoute />}>
+        <Route element={<Layout />}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/devices" element={<DevicesPage />} />
+          <Route path="/devices/:id" element={<DeviceDetailsPage />} />
+          <Route path="/configuration" element={<ConfigurationPage />} />
+          <Route path="/analysis" element={<AnalysisPage />} />
+          <Route path="/analysis/:id" element={<AnalysisDetailsPage />} />
+          <Route path="/compliance" element={<CompliancePage />} />
+          <Route path="/findings" element={<FindingsPage />} />
+          <Route path="/findings/:id" element={<FindingDetailsPage />} />
+          <Route path="/remediation" element={<RemediationPage />} />
+          <Route path="/training" element={<TrainingPage />} />
+          <Route path="/frameworks" element={<FrameworksPage />} />
+          <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/audit-logs" element={<AuditLogsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+        </Route>
       </Route>
     </Routes>
   )
