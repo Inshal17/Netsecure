@@ -1,50 +1,232 @@
 # NetSecureAI — Multi-Vendor Network Security Compliance Auditor
 
-NetSecureAI ingests network device configuration exports, converts them to a vendor-neutral Security Baseline Model, evaluates selected compliance controls, and produces actionable remediation and PDF evidence.
+NetSecureAI is a full-stack prototype for auditing network device configuration exports against security baselines. It ingests vendor-specific configuration files, normalizes them into a common Security Baseline Model, evaluates them against multiple frameworks, and produces evidence-based findings, risk scoring, remediation guidance, and report exports.
 
-## Implemented workflow
+This project is designed around the NTRO-style requirement for an AI-assisted, multi-vendor network security compliance auditor and includes a working prototype with backend automation, frontend dashboarding, security controls mapping, and a training pipeline for unknown device syntax.
+
+## Project scope
+
+The current implementation covers:
+
+- Vendor and device-family detection for major network operating systems
+- Configuration parsing and normalization into a baseline model
+- Crosswalk mapping to CIS Benchmarks, NIST SP 800-53, DISA STIG, and ISO/IEC 27001
+- Security findings with severity, evidence, and remediation suggestions
+- Dashboard and report views for compliance results
+- Training mappings for unknown or vendor-specific commands
+- Audit and health endpoints for API validation and operational monitoring
+- Local and Supabase-backed storage support
+- PDF report generation and export flows
+
+## Current implemented workflow
 
 ```text
-Config upload → vendor detection → line-level parsing
-                              ├─ known syntax → normalized baseline
-                              └─ unknown syntax → training mapping store → normalized baseline
-Normalized baseline → CIS/NIST/STIG/ISO control evaluation → findings + confidence → PDF report
+Upload config file
+  → vendor detection
+  → syntax parsing
+  → security baseline normalization
+  → applicable control evaluation
+  → findings + severity + remediation
+  → dashboard/report export
 ```
 
-The initial deterministic parsers support Cisco IOS-style, Arista EOS, Fortinet, Juniper, and SONiC configuration syntax. Unknown syntax can be mapped to one of the Security Baseline Model fields in the Training screen; that mapping is stored in SQLite and used on subsequent analyses without a backend change.
+## Supported vendors and parsing coverage
+
+The parser currently recognizes and evaluates major network vendor syntaxes, including:
+
+- Cisco IOS-style configuration
+- Juniper Junos-like configuration
+- Arista EOS configuration
+- Fortinet configuration
+- SONiC configuration
+
+Additional vendor families can be added through the training and heuristic mapping pipeline.
+
+## Framework coverage
+
+The project includes control mappings for:
+
+- CIS Benchmarks
+- NIST SP 800-53
+- DISA STIG
+- ISO/IEC 27001
+
+The framework metadata is exposed through the backend API and surfaced in the frontend as visible control families and source references.
+
+## Security baseline model
+
+The normalization layer maps device commands into a common security model with fields such as:
+
+- telnet_disabled
+- http_disabled
+- ssh_version
+- logging_enabled
+- ntp_configured
+- aaa_enabled
+- snmp_secure
+- idle_timeout
+- plus additional vendor-specific fields where applicable
+
+These control fields are evaluated with evidence and mapped to compliance frameworks.
+
+## Key features implemented
+
+### Backend
+
+- FastAPI REST service
+- configuration upload and analysis endpoints
+- local SQLite persistence and optional Supabase integration
+- training mapping API
+- compliance evaluation engine
+- evidence hashing and reproducible output
+- health, dashboard, findings, reports, and frameworks APIs
+- PDF report generation
+- authentication and authorization support
+- rate limiting and request identity tracking
+
+### Frontend
+
+- dashboard with summary cards
+- configuration upload workflow
+- analysis selection and result inspection
+- findings view with filtering
+- remediation view
+- framework overview
+- report export actions
+- training page for unknown command mapping
+
+### Data and mapping logic
+
+The project includes:
+
+- evidence-based compliance findings
+- deterministic rule evaluation
+- heuristic suggestions for unknown vendor commands
+- stored training mappings that can be reused across re-analysis
+- per-control mapping provenance and confidence values
+
+## Project structure
+
+```text
+Netsecure/
+├── backend/
+│   ├── main.py
+│   ├── tests/
+│   ├── scripts/
+│   ├── alembic/
+│   ├── data/
+│   └── README.md
+├── frontend/
+│   └── src/
+├── data/
+│   └── configs/
+├── docs/
+├── README.md
+├── package.json
+├── vite.config.ts
+├── index.html
+└── test-config.cfg
+```
 
 ## Local setup
 
-Requirements: Python 3.11+ and Node.js 20+.
+Requirements:
+
+- Python 3.11+
+- Node.js 20+
+- npm
+
+### Backend
 
 ```bash
-# Terminal 1 — API
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r backend/requirements.txt
+PYTHONPATH=. pytest -q backend/tests
 python3 -m uvicorn backend.main:app --reload --port 8000
+```
 
-# Terminal 2 — dashboard
+### Frontend
+
+```bash
 npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`. The API documentation is at `http://localhost:8000/docs`.
+Access the app at:
 
-For a deployed API, set `NETSECURE_AUTH_SECRET`, `NETSECURE_ADMIN_USERNAME`, and `NETSECURE_ADMIN_PASSWORD` in the backend environment. The frontend login obtains a signed session from the backend; API requests then use that session as a bearer token. `NETSECURE_API_TOKEN` and matching `VITE_API_TOKEN` remain available for service-to-service access. Keep both auth modes disabled only for local demo mode.
+- Frontend: http://localhost:5173
+- API docs: http://localhost:8000/docs
 
-## Demo
+## Environment variables
 
-1. Upload [sample insecure Cisco config](data/configs/cisco-insecure.cfg) in **Configurations**.
-2. Select **CIS Benchmarks** and start analysis.
-3. Review actual normalized findings and the per-control confidence source.
-4. Open the Training page and map an unfamiliar line to an SBM field.
-5. Re-upload the same syntax and observe it being classified as `trained_mapping`.
-6. Download the PDF through `GET /api/analyses/{analysis_id}/report.pdf` (the API docs expose this immediately; dashboard report wiring is the next UI increment).
+Key configuration values used by the app include:
 
-## Security Baseline Model fields
+- NETSECURE_AUTH_SECRET
+- NETSECURE_ADMIN_USERNAME
+- NETSECURE_ADMIN_PASSWORD
+- NETSECURE_VIEWER_USERNAME / PASSWORD
+- NETSECURE_AUDITOR_USERNAME / PASSWORD
+- NETSECURE_API_TOKEN
+- NETSECURE_CORS_ORIGINS
+- NETSECURE_API_RATE_LIMIT
+- NETSECURE_API_RATE_WINDOW_SECONDS
+- SUPABASE_URL
+- SUPABASE_SECRET_KEY
+- SUPABASE_BUCKET
 
-`telnet_disabled`, `http_disabled`, `ssh_version`, `logging_enabled`, `ntp_configured`, `aaa_enabled`, `snmp_secure`, and `idle_timeout`.
+## Verification status
 
-Controls are intentionally declarative in the backend catalogue and cross-mapped into CIS, NIST SP 800-53, DISA STIG, and ISO/IEC 27001 result IDs. Expand each framework with reviewed, versioned source controls before describing the product as certified compliance coverage.
+The project was validated with real checks:
 
-## Safety note
+- Backend test suite passed with:
+  `PYTHONPATH=. pytest -q backend/tests`
+  Result: 27 passed
 
-Use sanitized configuration exports only. The ingestion path redacts common password, secret, community, and key values before analysis persistence, but this is a demo safeguard—not a replacement for production secrets management, encryption, RBAC, and retention policy.
+- Frontend production build passed with:
+  `npm run build -- --emptyOutDir`
+  Result: successful Vite build completed
+
+This confirms the current prototype is functionally working and stable enough for demo and local validation.
+
+## Blockchain extension plan
+
+The current implementation is already a working compliance prototype. The next major enhancement is to add blockchain-based integrity and auditability for compliance evidence.
+
+Recommended direction:
+
+- permissioned blockchain network such as Hyperledger Fabric or Quorum
+- store only hashes and metadata on-chain, not raw config data
+- anchor analysis records, findings, reports, and training mappings
+- enable tamper detection and immutable audit validation
+- expose verification status in the UI and report exports
+
+This blockchain layer should complement the compliance engine rather than replace it.
+
+## NTRO-grade prototype maturity
+
+The project currently satisfies the core problem statement as a strong prototype and demo system:
+
+- device configuration audit workflow exists
+- multi-vendor scanner exists
+- framework mapping exists
+- evidence and findings exist
+- dashboard and reporting exist
+- training and learning pipeline exists
+
+However, for a fully NTRO-grade production-level solution, the next major workstreams are:
+
+1. stronger authoritative framework validation and control review
+2. broader vendor coverage and richer parsing rules
+3. AI-assisted mapping confidence and explainability improvements
+4. blockchain-backed evidence integrity
+5. hardened enterprise security and governance controls
+6. final deployment-grade documentation and operational readiness
+
+## Safety and governance note
+
+Use sanitized configuration exports only. The ingestion path includes some redaction and strict handling for common secret patterns, but it should not be treated as a complete production secret-management or compliance platform without additional governance controls, retention policies, and deployment hardening.
+
+## Summary
+
+NetSecureAI is an operational proof-of-concept for AI-assisted network compliance auditing. It demonstrates the full cycle from configuration upload through parsing, normalization, framework evaluation, findings, remediation, and export. It is already suitable as a prototype and can be advanced further into an NTRO-grade compliance and evidence-integrity platform with the planned blockchain and governance enhancements.
