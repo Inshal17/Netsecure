@@ -46,6 +46,8 @@ Use the included helper to validate DB and S3 settings (non-destructive):
 python3 backend/scripts/test_storage.py
 ```
 
+When Supabase variables are configured, the same helper checks `analyses`, `mappings`, `audit_events`, and the configured storage bucket without printing secrets.
+
 Security notes
 
 - Avoid embedding credentials in version control. Use environment variables or a
@@ -77,6 +79,21 @@ Migration notes:
 
 Applying migrations without Alembic
 ----------------------------------
+
+Retention cleanup
+-----------------
+
+Preview local cleanup with `python3 backend/scripts/cleanup_retention.py`. Set `NETSECURE_RETENTION_DAYS` and add `--apply` only during an approved maintenance window. The command removes expired local analyses, mappings, audit events, and matching raw uploads.
+
+Supabase verification
+---------------------
+
+The configured Supabase project responds for `analyses`, `mappings`, and storage. Apply `backend/migrations/0001_initial.sql` in the Supabase SQL Editor before using remote audit logs; the application cannot create Postgres tables through the REST client.
+
+Local backup and restore
+------------------------
+
+Use `python3 backend/scripts/backup_local_data.py backup /path/netsecureai.tar.gz` to create a consistent SQLite and upload archive. Restore with the `restore` command; `--force` is required before existing local targets are replaced.
 
 If you prefer not to install Alembic in a quick environment, an equivalent SQL migration is provided at `backend/migrations/0001_initial.sql`.
 

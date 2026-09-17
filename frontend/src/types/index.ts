@@ -112,6 +112,10 @@ export interface FrameworkDefinition {
   activeRules: number
   lastUpdated: string
   status: 'Healthy' | 'Monitoring' | 'Needs Review'
+  version?: string
+  authorityUrl?: string
+  reviewStatus?: string
+  scope?: string
 }
 
 export interface ReportItem {

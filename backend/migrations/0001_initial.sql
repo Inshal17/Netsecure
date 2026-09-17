@@ -22,3 +22,14 @@ CREATE TABLE IF NOT EXISTS analyses (
   result_json TEXT NOT NULL,
   upload_url TEXT
 );
+
+CREATE TABLE IF NOT EXISTS audit_events (
+  id TEXT PRIMARY KEY,
+  timestamp TEXT NOT NULL,
+  "user" TEXT NOT NULL,
+  action TEXT NOT NULL,
+  resource TEXT NOT NULL,
+  device TEXT NOT NULL,
+  result TEXT NOT NULL,
+  ip_address TEXT NOT NULL
+);

@@ -14,11 +14,16 @@ The local SQLite database is no longer used for application data.
 from __future__ import annotations
 
 import io
+import base64
+import hashlib
+import hmac
 import importlib
 import json
+import logging
 import os
 import re
 import sqlite3
+import time
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -26,9 +31,9 @@ from typing import Any
 from xml.sax.saxutils import escape
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -52,6 +57,7 @@ except ModuleNotFoundError:  # pragma: no cover - optional dependency
 # ============================================================
 
 ROOT = Path(__file__).resolve().parent
+logger = logging.getLogger("netsecureai.api")
 
 # Load backend/.env
 load_dotenv(ROOT / ".env")
@@ -62,6 +68,9 @@ SUPABASE_BUCKET = os.getenv(
     "SUPABASE_BUCKET",
     "configurations",
 )
+AUTH_SECRET = os.getenv("NETSECURE_AUTH_SECRET", "")
+LOGIN_ATTEMPTS: dict[str, list[float]] = {}
+API_REQUESTS: dict[str, list[float]] = {}
 
 supabase = None
 
@@ -94,20 +103,116 @@ app = FastAPI(
 )
 
 
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    request_id = request.headers.get("X-Request-ID", uuid.uuid4().hex[:16])
+    logger.exception(
+        json.dumps(
+            {
+                "event": "unhandled_exception",
+                "request_id": request_id,
+                "method": request.method,
+                "path": request.url.path,
+                "error_type": type(exc).__name__,
+            }
+        )
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error", "request_id": request_id},
+        headers={"X-Request-ID": request_id},
+    )
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:5174",
-        "http://127.0.0.1:5174",
-        "http://localhost:5175",
-        "http://127.0.0.1:5175",
+        origin.strip()
+        for origin in os.getenv(
+            "NETSECURE_CORS_ORIGINS",
+            "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:5175,http://127.0.0.1:5175",
+        ).split(",")
+        if origin.strip()
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def api_token_guard(request: Request, call_next):
+    """Require a static API token or signed user session when configured."""
+
+    configured_token = os.getenv("NETSECURE_API_TOKEN")
+    auth_secret = os.getenv("NETSECURE_AUTH_SECRET", "")
+    is_api_request = request.url.path.startswith("/api/")
+    is_public_request = request.url.path in {"/api/health", "/api/auth/login"} or request.method == "OPTIONS"
+    request_id = request.headers.get("X-Request-ID", uuid.uuid4().hex[:16])
+
+    if is_api_request and not is_public_request:
+        rate_limit = int(os.getenv("NETSECURE_API_RATE_LIMIT", "0"))
+        rate_window = int(os.getenv("NETSECURE_API_RATE_WINDOW_SECONDS", "60"))
+        client_id = request.client.host if request.client else "unknown"
+        now_timestamp = time.time()
+        recent_requests = [
+            timestamp
+            for timestamp in API_REQUESTS.get(client_id, [])
+            if now_timestamp - timestamp < rate_window
+        ]
+        if rate_limit > 0 and len(recent_requests) >= rate_limit:
+            logger.info(json.dumps({
+                "event": "http_request",
+                "request_id": request_id,
+                "method": request.method,
+                "path": request.url.path,
+                "status": 429,
+            }))
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "API rate limit exceeded; try again later"},
+                headers={"Retry-After": str(rate_window), "X-Request-ID": request_id},
+            )
+        if rate_limit > 0:
+            recent_requests.append(now_timestamp)
+            API_REQUESTS[client_id] = recent_requests
+
+    if (configured_token or auth_secret) and is_api_request and not is_public_request:
+        authorization = request.headers.get("Authorization", "")
+        bearer = authorization.removeprefix("Bearer ").strip()
+        valid_static = bool(configured_token and hmac.compare_digest(bearer, configured_token))
+        session = verify_session_token(bearer, auth_secret) if auth_secret else None
+        valid_session = bool(session)
+        if not (valid_static or valid_session):
+            logger.info(json.dumps({
+                "event": "http_request",
+                "request_id": request_id,
+                "method": request.method,
+                "path": request.url.path,
+                "status": 401,
+            }))
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Valid API bearer token required"},
+                headers={"WWW-Authenticate": "Bearer", "X-Request-ID": request_id},
+            )
+        if session:
+            request.state.user = session
+
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
+    logger.info(
+        json.dumps(
+            {
+                "event": "http_request",
+                "request_id": request_id,
+                "method": request.method,
+                "path": request.url.path,
+                "status": response.status_code,
+            }
+        )
+    )
+    return response
 
 
 # ============================================================
@@ -116,6 +221,33 @@ app.add_middleware(
 
 def now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def evidence_hash(result: dict[str, Any]) -> str:
+    canonical = json.dumps(result, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def create_session_token(username: str, role: str, secret: str) -> str:
+    payload = f"{username}|{role}|{int(time.time()) + 28800}"
+    encoded = base64.urlsafe_b64encode(payload.encode()).decode().rstrip("=")
+    signature = hmac.new(secret.encode(), encoded.encode(), hashlib.sha256).hexdigest()
+    return f"{encoded}.{signature}"
+
+
+def verify_session_token(token: str, secret: str) -> dict[str, str] | None:
+    try:
+        encoded, signature = token.split(".", 1)
+        expected = hmac.new(secret.encode(), encoded.encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(signature, expected):
+            return None
+        payload = base64.urlsafe_b64decode(f"{encoded}===").decode()
+        username, role, expires = payload.split("|", 2)
+        if int(expires) <= int(time.time()):
+            return None
+        return {"username": username, "role": role}
+    except (ValueError, UnicodeDecodeError, base64.binascii.Error):
+        return None
 
 
 def require_supabase():
@@ -139,6 +271,85 @@ def local_rows(query: str, parameters: tuple[Any, ...] = ()) -> list[dict[str, A
     with sqlite3.connect(LOCAL_DB) as connection:
         connection.row_factory = sqlite3.Row
         return [dict(row) for row in connection.execute(query, parameters)]
+
+
+def ensure_local_audit_table() -> None:
+    if not LOCAL_DB.exists():
+        return
+
+    with sqlite3.connect(LOCAL_DB) as connection:
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS audit_events (
+                id TEXT PRIMARY KEY,
+                timestamp TEXT NOT NULL,
+                user TEXT NOT NULL,
+                action TEXT NOT NULL,
+                resource TEXT NOT NULL,
+                device TEXT NOT NULL,
+                result TEXT NOT NULL,
+                ip_address TEXT NOT NULL
+            )
+            """
+        )
+
+
+def record_local_audit(
+    action: str,
+    resource: str,
+    result: str = "Success",
+    device: str = "Unknown",
+) -> None:
+    if not LOCAL_DB.exists():
+        return
+
+    ensure_local_audit_table()
+    with sqlite3.connect(LOCAL_DB) as connection:
+        connection.execute(
+            """
+            INSERT INTO audit_events
+            (id, timestamp, user, action, resource, device, result, ip_address)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                f"audit-{uuid.uuid4().hex[:12]}",
+                now(),
+                "Admin",
+                action,
+                resource,
+                device,
+                result,
+                "127.0.0.1",
+            ),
+        )
+        connection.commit()
+
+
+def record_audit_event(
+    action: str,
+    resource: str,
+    result: str = "Success",
+    device: str = "Unknown",
+) -> None:
+    if supabase is None:
+        record_local_audit(action, resource, result, device)
+        return
+
+    try:
+        supabase.table("audit_events").insert(
+            {
+                "id": f"audit-{uuid.uuid4().hex[:12]}",
+                "timestamp": now(),
+                "user": "Admin",
+                "action": action,
+                "resource": resource,
+                "device": device,
+                "result": result,
+                "ip_address": "127.0.0.1",
+            }
+        ).execute()
+    except Exception as exc:
+        print("Audit event could not be persisted:", exc)
 
 
 # ============================================================
@@ -170,6 +381,11 @@ class TrainingMapping(BaseModel):
         ge=0,
         le=100,
     )
+
+
+class LoginRequest(BaseModel):
+    username: str = Field(min_length=1, max_length=100)
+    password: str = Field(min_length=1, max_length=200)
 
 
 # ============================================================
@@ -298,6 +514,50 @@ CONTROL_CATALOG = [
     ),
 ]
 
+COMMON_CONTROL_FIELDS = {
+    "telnet_disabled",
+    "http_disabled",
+    "ssh_version",
+    "logging_enabled",
+    "ntp_configured",
+    "aaa_enabled",
+    "snmp_secure",
+    "idle_timeout",
+}
+
+CONTROL_VENDOR_APPLICABILITY = {
+    "Cisco": {field for field, *_ in CONTROL_CATALOG},
+    "Juniper": COMMON_CONTROL_FIELDS | {
+        "ssh_rate_limit",
+        "login_attempts",
+        "reverse_telnet_disabled",
+        "ftp_disabled",
+    },
+    "Arista": COMMON_CONTROL_FIELDS,
+    "SONiC": COMMON_CONTROL_FIELDS,
+    "Fortinet": COMMON_CONTROL_FIELDS,
+}
+
+CONTROL_REFERENCES = {
+    "telnet_disabled": {"CIS": "CIS 1.1.1", "NIST": "AC-17(2)", "STIG": "NET-01", "ISO": "A.5.15"},
+    "http_disabled": {"CIS": "CIS 1.1.2", "NIST": "CM-7", "STIG": "NET-02", "ISO": "A.8.2"},
+    "ssh_version": {"CIS": "CIS 1.1.3", "NIST": "AC-17(2)", "STIG": "NET-03", "ISO": "A.8.2"},
+    "logging_enabled": {"CIS": "CIS 2.1.1", "NIST": "AU-2", "STIG": "LOG-01", "ISO": "A.8.2"},
+    "ntp_configured": {"CIS": "CIS 3.3.1", "NIST": "AU-8", "STIG": "TIM-01", "ISO": "A.8.4"},
+    "aaa_enabled": {"CIS": "CIS 4.1.1", "NIST": "IA-2", "STIG": "AUTH-01", "ISO": "A.5.2"},
+    "snmp_secure": {"CIS": "CIS 5.2.1", "NIST": "CM-6", "STIG": "MON-01", "ISO": "A.8.2"},
+    "idle_timeout": {"CIS": "CIS 6.3.1", "NIST": "AC-2(5)", "STIG": "SESS-01", "ISO": "A.5.17"},
+    "source_routing_disabled": {"CIS": "CIS 7.1.1", "NIST": "CM-7", "STIG": "NET-04", "ISO": "A.8.2"},
+    "proxy_arp_disabled": {"CIS": "CIS 7.2.1", "NIST": "SC-7", "STIG": "INT-01", "ISO": "A.8.2"},
+    "tcp_keepalives_enabled": {"CIS": "CIS 8.1.1", "NIST": "SC-7", "STIG": "TRN-01", "ISO": "A.8.2"},
+    "pad_disabled": {"CIS": "CIS 8.2.1", "NIST": "CM-7", "STIG": "LEG-01", "ISO": "A.8.2"},
+    "ntp_authenticated": {"CIS": "CIS 3.3.2", "NIST": "AU-8", "STIG": "TIM-02", "ISO": "A.8.4"},
+    "ssh_rate_limit": {"CIS": "CIS 1.1.4", "NIST": "AC-7", "STIG": "NET-05", "ISO": "A.5.2"},
+    "login_attempts": {"CIS": "CIS 4.1.2", "NIST": "AC-7", "STIG": "AUTH-02", "ISO": "A.5.2"},
+    "reverse_telnet_disabled": {"CIS": "CIS 8.3.1", "NIST": "CM-7", "STIG": "LEG-02", "ISO": "A.8.2"},
+    "ftp_disabled": {"CIS": "CIS 8.3.2", "NIST": "CM-7", "STIG": "LEG-03", "ISO": "A.8.2"},
+}
+
 
 # ============================================================
 # FRAMEWORKS
@@ -308,6 +568,37 @@ FRAMEWORK_IDS = {
     "NIST SP 800-53": "NIST",
     "DISA STIG": "STIG",
     "ISO/IEC 27001": "ISO",
+}
+
+FRAMEWORK_METADATA = {
+    "CIS": {
+        "source": "CIS Controls and vendor benchmark crosswalk",
+        "version": "v8-aligned",
+        "authorityUrl": "https://www.cisecurity.org/controls",
+        "reviewStatus": "Crosswalk review required",
+        "scope": "Network security baseline indicators",
+    },
+    "NIST": {
+        "source": "NIST SP 800-53 Rev. 5 control families",
+        "version": "Rev. 5",
+        "authorityUrl": "https://csrc.nist.gov/publications/detail/sp/800-53/rev-5/final",
+        "reviewStatus": "Reference aligned",
+        "scope": "Access, audit, configuration, and system protection controls",
+    },
+    "STIG": {
+        "source": "DISA network device STIG-style requirements",
+        "version": "2024 baseline",
+        "authorityUrl": "https://public.cyber.mil/stigs/",
+        "reviewStatus": "STIG applicability review required",
+        "scope": "Network device hardening indicators",
+    },
+    "ISO": {
+        "source": "ISO/IEC 27001:2022 Annex A crosswalk",
+        "version": "2022",
+        "authorityUrl": "https://www.iso.org/standard/27001.html",
+        "reviewStatus": "Annex A mapping review required",
+        "scope": "Information security control themes",
+    },
 }
 
 
@@ -356,6 +647,46 @@ REMEDIATIONS = {
 
         "ntp_authenticated":
             "ntp authenticate",
+    },
+
+    "Arista": {
+        "telnet_disabled":
+            "no management telnet",
+
+        "http_disabled":
+            "no management api http-commands",
+
+        "ssh_version":
+            "management ssh",
+
+        "logging_enabled":
+            "logging host <SIEM_IP>",
+
+        "ntp_configured":
+            "ntp server <NTP_IP>",
+
+        "aaa_enabled":
+            "aaa authorization exec default local",
+
+        "idle_timeout":
+            "exec-timeout 10",
+    },
+
+    "SONiC": {
+        "http_disabled":
+            "sudo config http disable",
+
+        "ntp_configured":
+            "sudo config ntp add <NTP_IP>",
+
+        "logging_enabled":
+            "sudo config syslog add <SIEM_IP>",
+
+        "aaa_enabled":
+            "sudo config aaa enable",
+
+        "idle_timeout":
+            "set mgmt timeout 10",
     },
 
     "Fortinet": {
@@ -471,6 +802,13 @@ def detect_vendor(
 
     if "sonic" in lower:
         return "SONiC"
+
+    if (
+        "arista" in lower
+        or "management ssh" in lower
+        or "management api http-commands" in lower
+    ):
+        return "Arista"
 
     if (
         "hostname " in lower
@@ -750,6 +1088,84 @@ def parse_known(
                 recognized.add(text)
 
         # ----------------------------------------------------
+        # SONIC
+
+        elif vendor == "SONiC":
+
+            if lower.startswith("set mgmt timeout "):
+                set_field(baseline, "idle_timeout", True, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower in {"set mgmt http disable", "sudo config http disable"}:
+                set_field(baseline, "http_disabled", True, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower in {"set mgmt http enable", "sudo config http enable"}:
+                set_field(baseline, "http_disabled", False, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower.startswith(("set system ntp server ", "sudo config ntp add ")):
+                set_field(baseline, "ntp_configured", True, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower.startswith(("set system syslog server ", "sudo config syslog add ")):
+                set_field(baseline, "logging_enabled", True, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower.startswith(("set aaa authentication ", "sudo config aaa enable")):
+                set_field(baseline, "aaa_enabled", True, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower == "set mgmt telnet enable":
+                set_field(baseline, "telnet_disabled", False, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower == "set mgmt telnet disable":
+                set_field(baseline, "telnet_disabled", True, text, 100, "deterministic")
+                recognized.add(text)
+
+        # FORTINET
+        # ----------------------------------------------------
+
+        elif vendor == "Arista":
+
+            if lower == "no management telnet":
+                set_field(baseline, "telnet_disabled", True, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower == "management telnet":
+                set_field(baseline, "telnet_disabled", False, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower == "no management api http-commands":
+                set_field(baseline, "http_disabled", True, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower == "management api http-commands":
+                set_field(baseline, "http_disabled", False, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower == "management ssh":
+                set_field(baseline, "ssh_version", "2", text, 90, "deterministic")
+                recognized.add(text)
+
+            elif lower.startswith("logging host "):
+                set_field(baseline, "logging_enabled", True, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower.startswith("ntp server "):
+                set_field(baseline, "ntp_configured", True, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower.startswith("aaa authorization exec"):
+                set_field(baseline, "aaa_enabled", True, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower.startswith("exec-timeout "):
+                set_field(baseline, "idle_timeout", True, text, 100, "deterministic")
+                recognized.add(text)
+
+        # ----------------------------------------------------
         # FORTINET
         # ----------------------------------------------------
 
@@ -783,6 +1199,25 @@ def parse_known(
                     "deterministic",
                 )
 
+                recognized.add(text)
+
+            elif lower in {
+                "set admin-https-redirect enable",
+                "set admin-http disable",
+            }:
+                set_field(baseline, "http_disabled", True, text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower in {"set ssh-v1 disable", "set ssh-version 2"}:
+                set_field(baseline, "ssh_version", "2", text, 100, "deterministic")
+                recognized.add(text)
+
+            elif lower.startswith("set auth-server ") or lower.startswith("set auth-"):
+                set_field(baseline, "aaa_enabled", True, text, 90, "deterministic")
+                recognized.add(text)
+
+            elif lower in {"set snmp-community disable", "set snmp-v3 enable"}:
+                set_field(baseline, "snmp_secure", True, text, 90, "deterministic")
                 recognized.add(text)
 
             elif lower.startswith(
@@ -1153,9 +1588,16 @@ def evaluate(
 
         item = baseline[field]
 
+        applicable = field in CONTROL_VENDOR_APPLICABILITY.get(
+            vendor,
+            {catalog_field for catalog_field, *_ in CONTROL_CATALOG},
+        )
+
         value = item["value"]
 
-        if value == expected:
+        if not applicable:
+            result = "Not Applicable"
+        elif value == expected:
             result = "Pass"
 
         elif value is None:
@@ -1171,15 +1613,25 @@ def evaluate(
             f"{framework_id}-{index:02d}"
         )
 
+        references = CONTROL_REFERENCES.get(field, {})
+        framework_reference = references.get(framework_id, references.get("CIS", "Reference N/A"))
+        mapping_status = "Mapped" if framework_id in references else "Unmapped"
+
         controls.append(
             {
                 "id": control_id,
+            "controlKey": field,
                 "framework": framework,
+            "frameworkId": framework_id,
                 "field": field,
                 "requirement": requirement,
                 "result": result,
                 "severity": severity,
                 "category": category,
+                "reference": framework_reference,
+                "references": [framework_reference],
+                "mappingStatus": mapping_status,
+                "applicability": "Applicable" if applicable else "Not Applicable",
                 "evidence": (
                     item["evidence"][0]
                     if item["evidence"]
@@ -1191,6 +1643,9 @@ def evaluate(
                 "confidence_source": item[
                     "source"
                 ],
+                "evidenceSource": item["source"],
+                "trainingApplied": item["source"] == "trained_mapping",
+                "remediationSource": "vendor-specific" if vendor in REMEDIATIONS and field in REMEDIATIONS[vendor] else "generic guidance",
                 "remediation": remediation(
                     vendor,
                     field,
@@ -1198,11 +1653,14 @@ def evaluate(
             }
         )
 
-    score = round(
-        passed
-        / len(CONTROL_CATALOG)
-        * 100
+    applicable_count = sum(
+        field in CONTROL_VENDOR_APPLICABILITY.get(
+            vendor,
+            {catalog_field for catalog_field, *_ in CONTROL_CATALOG},
+        )
+        for field, *_ in CONTROL_CATALOG
     )
+    score = round(passed / applicable_count * 100) if applicable_count else 0
 
     return controls, score
 
@@ -1210,6 +1668,42 @@ def evaluate(
 # ============================================================
 # ANALYSIS ENGINE
 # ============================================================
+
+def infer_unknown_mapping(line: str, vendor: str | None = None) -> str | None:
+    text = line.strip().lower()
+    if not text or text.startswith(("!", "#", "end", "exit")):
+        return None
+
+    if "ssh" in text and ("version" in text or "protocol-version" in text):
+        return "ssh_version"
+    if "telnet" in text:
+        return "telnet_disabled"
+    if "http" in text or "web-management" in text or "admin-http" in text:
+        return "http_disabled"
+    if "logging" in text or "syslog" in text:
+        return "logging_enabled"
+    if "ntp" in text:
+        return "ntp_configured"
+    if "aaa" in text or "radius" in text or "tacacs" in text:
+        return "aaa_enabled"
+    if "idle-timeout" in text or "admintimeout" in text or "exec-timeout" in text:
+        return "idle_timeout"
+    if "source-route" in text or "source route" in text:
+        return "source_routing_disabled"
+    if "proxy-arp" in text:
+        return "proxy_arp_disabled"
+    if "retry-options" in text or "login attempts" in text or "tries-before-disconnect" in text:
+        return "login_attempts"
+    if "rate-limit" in text:
+        return "ssh_rate_limit"
+    if "reverse-telnet" in text:
+        return "reverse_telnet_disabled"
+    if "ftp" in text:
+        return "ftp_disabled"
+    if "community" in text or "snmp" in text:
+        return "snmp_secure"
+    return None
+
 
 def analyze(
     filename: str,
@@ -1254,6 +1748,22 @@ def analyze(
             )
         )
     ]
+
+    heuristic_suggestions = []
+    for line in config.splitlines():
+        command = line.strip()
+        if not command:
+            continue
+        field_name = infer_unknown_mapping(command, vendor)
+        if field_name and command not in recognized and command not in mapped:
+            heuristic_suggestions.append(
+                {
+                    "raw_command": command,
+                    "suggested_field": field_name,
+                    "confidence": 72,
+                    "reason": "Keyword match from vendor-agnostic security heuristic",
+                }
+            )
 
     controls, score = evaluate(
         baseline,
@@ -1335,7 +1845,7 @@ def analyze(
         "Not detected",
     )
 
-    return {
+    result = {
         "id": (
             f"analysis-"
             f"{uuid.uuid4().hex[:12]}"
@@ -1383,6 +1893,9 @@ def analyze(
         "unknownLines":
             unknown[:100],
 
+        "heuristicSuggestions":
+            heuristic_suggestions[:20],
+
         "summary":
             (
                 f"{vendor} configuration "
@@ -1391,6 +1904,9 @@ def analyze(
                 f"against {framework}."
             ),
     }
+    result["evidenceHash"] = evidence_hash(result)
+    result["hashAlgorithm"] = "SHA-256"
+    return result
 
 
 # ============================================================
@@ -1472,12 +1988,79 @@ def health() -> dict[str, Any]:
     }
 
 
+@app.post("/api/auth/login")
+def login(request: Request, payload: LoginRequest) -> dict[str, Any]:
+    client_id = request.client.host if request.client else "unknown"
+    now_timestamp = time.time()
+    window_seconds = int(os.getenv("NETSECURE_LOGIN_WINDOW_SECONDS", "60"))
+    max_attempts = int(os.getenv("NETSECURE_LOGIN_MAX_ATTEMPTS", "5"))
+    recent_attempts = [
+        timestamp
+        for timestamp in LOGIN_ATTEMPTS.get(client_id, [])
+        if now_timestamp - timestamp < window_seconds
+    ]
+    if len(recent_attempts) >= max_attempts:
+        raise HTTPException(status_code=429, detail="Too many login attempts; try again later")
+
+    secret = os.getenv("NETSECURE_AUTH_SECRET", "local-development-secret")
+
+    accounts = [
+        (
+            os.getenv("NETSECURE_ADMIN_USERNAME", "admin"),
+            os.getenv("NETSECURE_ADMIN_PASSWORD", "admin@123"),
+            os.getenv("NETSECURE_ADMIN_ROLE", "admin"),
+        ),
+        (
+            os.getenv("NETSECURE_VIEWER_USERNAME", ""),
+            os.getenv("NETSECURE_VIEWER_PASSWORD", ""),
+            "viewer",
+        ),
+        (
+            os.getenv("NETSECURE_AUDITOR_USERNAME", ""),
+            os.getenv("NETSECURE_AUDITOR_PASSWORD", ""),
+            "auditor",
+        ),
+    ]
+    matched_account = next(
+        (
+            account
+            for account in accounts
+            if account[0]
+            and hmac.compare_digest(payload.username, account[0])
+            and hmac.compare_digest(payload.password, account[1])
+        ),
+        None,
+    )
+
+    if matched_account is None:
+        recent_attempts.append(now_timestamp)
+        LOGIN_ATTEMPTS[client_id] = recent_attempts
+        raise HTTPException(status_code=401, detail="Incorrect ID or password")
+
+    LOGIN_ATTEMPTS.pop(client_id, None)
+    role = matched_account[2]
+    return {
+        "access_token": create_session_token(payload.username, role, secret),
+        "token_type": "bearer",
+        "user": payload.username,
+        "role": role,
+    }
+
+
 # ============================================================
 # STORAGE INFO
 # ============================================================
 
 @app.get("/api/storage-info")
 def storage_info() -> dict[str, Any]:
+
+    audit_events_configured = None
+    if supabase is not None:
+        try:
+            supabase.table("audit_events").select("id").limit(1).execute()
+            audit_events_configured = True
+        except Exception:
+            audit_events_configured = False
 
     return {
         "storage_provider":
@@ -1488,6 +2071,9 @@ def storage_info() -> dict[str, Any]:
 
         "supabase_bucket":
             SUPABASE_BUCKET,
+
+        "audit_events_configured":
+            audit_events_configured,
     }
 
 
@@ -1600,6 +2186,11 @@ async def upload_analysis(
             raise HTTPException(status_code=500, detail=f"Could not save local analysis: {exc}")
 
         result["upload_url"] = upload_url
+        record_audit_event(
+            "Analysis completed",
+            result["fileName"],
+            device=result["device"].get("name", "Unknown"),
+        )
         return result
 
     # --------------------------------------------------------
@@ -1710,6 +2301,41 @@ async def upload_analysis(
     result["upload_url"] = upload_url
 
     return result
+
+
+@app.get("/api/audit-logs")
+def list_audit_logs() -> list[dict[str, Any]]:
+    if supabase is not None:
+        try:
+            response = supabase.table("audit_events").select("*").order("timestamp", desc=True).execute()
+        except Exception as exc:
+            logger.warning("Supabase audit_events table unavailable: %s", type(exc).__name__)
+            return []
+        rows = response.data or []
+        return [
+            {
+                **row,
+                "ipAddress": row.get("ip_address", "Unknown"),
+            }
+            for row in rows
+        ]
+
+    ensure_local_audit_table()
+    return [
+        {
+            "id": row["id"],
+            "timestamp": row["timestamp"],
+            "user": row["user"],
+            "action": row["action"],
+            "resource": row["resource"],
+            "device": row["device"],
+            "result": row["result"],
+            "ipAddress": row["ip_address"],
+        }
+        for row in local_rows(
+            "SELECT * FROM audit_events ORDER BY timestamp DESC"
+        )
+    ]
 
 
 # ============================================================
@@ -2004,9 +2630,7 @@ def dashboard() -> dict[str, Any]:
             "controls",
             [],
         )
-        if control.get(
-            "result"
-        ) != "Pass"
+        if control.get("result") in {"Fail", "Warning"}
     ]
 
     if current:
@@ -2285,9 +2909,7 @@ def findings() -> list[
             [],
         ):
 
-            if control.get(
-                "result"
-            ) == "Pass":
+            if control.get("result") in {"Pass", "Not Applicable"}:
 
                 continue
 
@@ -2441,13 +3063,16 @@ def list_frameworks() -> list[
 
     frameworks = []
 
-    controls_count = len(
-        CONTROL_CATALOG
-    )
-
     for name, framework_id in (
         FRAMEWORK_IDS.items()
     ):
+
+        mapped_controls = [
+            field
+            for field, references in CONTROL_REFERENCES.items()
+            if framework_id in references
+        ]
+        metadata = FRAMEWORK_METADATA.get(framework_id, {})
 
         frameworks.append(
             {
@@ -2458,13 +3083,28 @@ def list_frameworks() -> list[
                     name,
 
                 "controls":
-                    controls_count,
+                    len(mapped_controls),
 
                 "activeRules":
-                    controls_count,
+                    len(mapped_controls),
 
                 "description":
-                    f"{name} controls",
+                    metadata.get("source", f"{name} controls"),
+
+                "version":
+                    metadata.get("version", "Not specified"),
+
+                "authorityUrl":
+                    metadata.get("authorityUrl", ""),
+
+                "reviewStatus":
+                    metadata.get("reviewStatus", "Review required"),
+
+                "scope":
+                    metadata.get("scope", "Not specified"),
+
+                "mappedControls":
+                    mapped_controls,
 
                 "status":
                     "Healthy",
@@ -2612,8 +3252,13 @@ def list_mappings() -> list[
     status_code=201,
 )
 def create_mapping(
+    request: Request,
     payload: TrainingMapping,
 ) -> dict[str, Any]:
+
+    authenticated_user = getattr(request.state, "user", None)
+    if authenticated_user and authenticated_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Administrator role required")
 
     valid_fields = {
         item[0]
@@ -2682,6 +3327,10 @@ def create_mapping(
                 ),
             )
             connection.commit()
+        record_audit_event(
+            "AI mapping created",
+            record["raw_command"],
+        )
         return record
 
     client = require_supabase()
@@ -2713,7 +3362,10 @@ def create_mapping(
 @app.post(
     "/api/training-mappings/apply"
 )
-def apply_mappings_endpoint() -> dict[str, Any]:
+def apply_mappings_endpoint(request: Request) -> dict[str, Any]:
+    authenticated_user = getattr(request.state, "user", None)
+    if authenticated_user and authenticated_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Administrator role required")
 
     if supabase is None:
         updated = 0
@@ -2925,6 +3577,9 @@ def report(
                 f"<br/>"
                 f"<b>Compliance score:</b> "
                 f"{result['overallScore']}%"
+                f"<br/>"
+                f"<b>Evidence hash (SHA-256):</b> "
+                f"{escape(str(result.get('evidenceHash', 'Not available')))}"
             ),
             styles["BodyText"],
         )

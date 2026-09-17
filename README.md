@@ -11,7 +11,7 @@ Config upload → vendor detection → line-level parsing
 Normalized baseline → CIS/NIST/STIG/ISO control evaluation → findings + confidence → PDF report
 ```
 
-The initial deterministic parsers support Cisco IOS-style, Fortinet, and Juniper configuration syntax. Unknown syntax can be mapped to one of the Security Baseline Model fields in the Training screen; that mapping is stored in SQLite and used on subsequent analyses without a backend change.
+The initial deterministic parsers support Cisco IOS-style, Arista EOS, Fortinet, Juniper, and SONiC configuration syntax. Unknown syntax can be mapped to one of the Security Baseline Model fields in the Training screen; that mapping is stored in SQLite and used on subsequent analyses without a backend change.
 
 ## Local setup
 
@@ -27,6 +27,8 @@ npm run dev
 ```
 
 Open `http://localhost:5173`. The API documentation is at `http://localhost:8000/docs`.
+
+For a deployed API, set `NETSECURE_AUTH_SECRET`, `NETSECURE_ADMIN_USERNAME`, and `NETSECURE_ADMIN_PASSWORD` in the backend environment. The frontend login obtains a signed session from the backend; API requests then use that session as a bearer token. `NETSECURE_API_TOKEN` and matching `VITE_API_TOKEN` remain available for service-to-service access. Keep both auth modes disabled only for local demo mode.
 
 ## Demo
 

@@ -1357,6 +1357,8 @@ function AnalysisDetailsPage() {
   if (loading) return <div className="empty-state">Loading persisted analysis result…</div>
   if (!result) return <div className="empty-state">Analysis result not found.</div>
 
+  const heuristicSuggestions = result.heuristicSuggestions ?? []
+
   return (
     <div className="page-stack">
       <div className="panel summary-grid-panel">
@@ -1369,6 +1371,34 @@ function AnalysisDetailsPage() {
           <div><span>Warnings</span><strong>{result.warnings}</strong></div>
         </div>
       </div>
+
+      {heuristicSuggestions.length ? (
+        <div className="panel">
+          <SectionHeader title="AI-Heuristic Suggestions" />
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Raw command</th>
+                  <th>Suggested field</th>
+                  <th>Confidence</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                {heuristicSuggestions.map((item: any, index: number) => (
+                  <tr key={`${item.raw_command}-${index}`}>
+                    <td>{item.raw_command}</td>
+                    <td>{item.suggested_field}</td>
+                    <td>{item.confidence}%</td>
+                    <td>{item.reason}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
 
       <div className="panel">
         <SectionHeader title="Control Results" />
@@ -1625,6 +1655,26 @@ function TrainingPage() {
       }))))
     }).catch(() => {})
   }, [])
+
+  const keywordSuggestions = useMemo(() => {
+    const text = form.command.toLowerCase()
+    if (!text) return []
+
+    const suggestions: Array<{ value: string; reason: string }> = []
+    if (text.includes('telnet')) suggestions.push({ value: 'telnet_disabled', reason: 'Remote telnet service keyword detected' })
+    if (text.includes('http') || text.includes('web-management') || text.includes('admin-http')) suggestions.push({ value: 'http_disabled', reason: 'HTTP management keyword detected' })
+    if (text.includes('ssh') || text.includes('protocol-version') || text.includes('version')) suggestions.push({ value: 'ssh_version', reason: 'SSH version keyword detected' })
+    if (text.includes('logging') || text.includes('syslog')) suggestions.push({ value: 'logging_enabled', reason: 'Logging or syslog keyword detected' })
+    if (text.includes('ntp')) suggestions.push({ value: 'ntp_configured', reason: 'Time synchronization keyword detected' })
+    if (text.includes('aaa') || text.includes('radius') || text.includes('tacacs')) suggestions.push({ value: 'aaa_enabled', reason: 'AAA or auth-server keyword detected' })
+    if (text.includes('idle') || text.includes('timeout') || text.includes('exec-timeout')) suggestions.push({ value: 'idle_timeout', reason: 'Session timeout keyword detected' })
+    if (text.includes('source-route') || text.includes('proxy-arp')) suggestions.push({ value: 'source_routing_disabled', reason: 'Routing or interface security keyword detected' })
+    if (text.includes('rate-limit') || text.includes('retry-options') || text.includes('tries-before-disconnect')) suggestions.push({ value: 'login_attempts', reason: 'Authentication throttle keyword detected' })
+    if (text.includes('reverse-telnet') || text.includes('ftp')) suggestions.push({ value: 'reverse_telnet_disabled', reason: 'Legacy service keyword detected' })
+
+    return suggestions.slice(0, 4)
+  }, [form.command])
+
   const [form, setForm] = useState({
     command: 'set management access legacy-protocol enable',
     vendor: 'Unknown Vendor',
@@ -1680,6 +1730,27 @@ function TrainingPage() {
           ) : null}
           <input value={form.command} onChange={(event) => setForm((current) => ({ ...current, command: event.target.value }))} aria-label="Raw unknown command" />
         </div>
+
+        {keywordSuggestions.length ? (
+          <div className="panel" style={{ marginTop: 16, padding: 12 }}>
+            <h4 style={{ marginBottom: 8 }}>AI-suggested mappings</h4>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {keywordSuggestions.map((suggestion) => (
+                <button
+                  key={suggestion.value}
+                  type="button"
+                  className="ghost-button small"
+                  onClick={() => {
+                    setForm((current) => ({ ...current, parameter: suggestion.value, meaning: `${suggestion.reason}.` }))
+                    showToast(`Suggested mapping: ${suggestion.value}`, 'info')
+                  }}
+                >
+                  {suggestion.value} · {suggestion.reason}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <div className="training-form-grid">
           <label>

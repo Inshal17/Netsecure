@@ -1,27 +1,33 @@
-// Minimal hardcoded auth for NetSecureAI.
-// Exactly one account can sign in. Change the two constants below to rotate it.
-// This is client-side only (no backend check) — fine for a gated internal
-// dashboard, not a substitute for real authentication if this ever faces
-// the public internet.
-
 const AUTH_KEY = 'nsai-authenticated'
 const USER_KEY = 'nsai-user'
+const ROLE_KEY = 'nsai-role'
+const SESSION_KEY = 'nsai-session'
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api'
 
-const VALID_USERNAME = 'admin'
-const VALID_PASSWORD = 'admin@123'
-
-export function login(username: string, password: string): boolean {
-  const ok = username === VALID_USERNAME && password === VALID_PASSWORD
-  if (ok) {
+export async function login(username: string, password: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    })
+    if (!response.ok) return false
+    const session = await response.json()
     window.localStorage.setItem(AUTH_KEY, 'true')
     window.localStorage.setItem(USER_KEY, username)
+    window.localStorage.setItem(ROLE_KEY, session.role ?? 'viewer')
+    window.localStorage.setItem(SESSION_KEY, session.access_token)
+    return true
+  } catch {
+    return false
   }
-  return ok
 }
 
 export function logout() {
   window.localStorage.removeItem(AUTH_KEY)
   window.localStorage.removeItem(USER_KEY)
+  window.localStorage.removeItem(ROLE_KEY)
+  window.localStorage.removeItem(SESSION_KEY)
 }
 
 export function isAuthenticated(): boolean {
@@ -32,4 +38,14 @@ export function isAuthenticated(): boolean {
 export function getCurrentUser(): string | null {
   if (typeof window === 'undefined') return null
   return window.localStorage.getItem(USER_KEY)
+}
+
+export function getSessionToken(): string | null {
+  if (typeof window === 'undefined') return null
+  return window.localStorage.getItem(SESSION_KEY)
+}
+
+export function getCurrentRole(): string | null {
+  if (typeof window === 'undefined') return null
+  return window.localStorage.getItem(ROLE_KEY)
 }

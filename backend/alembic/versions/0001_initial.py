@@ -36,8 +36,20 @@ def upgrade():
         sa.Column('result_json', sa.Text(), nullable=False),
         sa.Column('upload_url', sa.Text(), nullable=True),
     )
+    op.create_table(
+        'audit_events',
+        sa.Column('id', sa.String(), primary_key=True),
+        sa.Column('timestamp', sa.String(), nullable=False),
+        sa.Column('user', sa.String(), nullable=False),
+        sa.Column('action', sa.String(), nullable=False),
+        sa.Column('resource', sa.Text(), nullable=False),
+        sa.Column('device', sa.String(), nullable=False),
+        sa.Column('result', sa.String(), nullable=False),
+        sa.Column('ip_address', sa.String(), nullable=False),
+    )
 
 
 def downgrade():
+    op.drop_table('audit_events')
     op.drop_table('analyses')
     op.drop_table('mappings')

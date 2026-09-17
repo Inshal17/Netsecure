@@ -9,13 +9,21 @@ import type {
   TrainingItem,
   UploadRecord,
 } from '../types'
+import { getSessionToken } from '../auth'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api'
+const API_TOKEN = import.meta.env.VITE_API_TOKEN
 const runtimeJobs: AnalysisJob[] = []
 const runtimeResults: AnalysisResult[] = []
+const authHeaders = (): Record<string, string> => {
+  const token = API_TOKEN ?? getSessionToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
 
 async function request<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`)
+  const response = await fetch(`${API_URL}${path}`, {
+    headers: authHeaders(),
+  })
   if (!response.ok) throw new Error('The compliance API is unavailable. Start the backend and try again.')
   return response.json() as Promise<T>
 }
@@ -33,6 +41,11 @@ export const getLiveReports = () => request<ReportItem[]>('/reports')
 export const getLiveAnalyses = () => request<any[]>('/analyses')
 export const getLiveTrainingMappings = () => request<any[]>('/training-mappings')
 export const reportUrl = (analysisId: string) => `${API_URL}/analyses/${analysisId}/report.pdf`
+export const downloadReport = async (analysisId: string): Promise<Blob> => {
+  const response = await fetch(reportUrl(analysisId), { headers: authHeaders() })
+  if (!response.ok) throw new Error('The PDF report could not be downloaded.')
+  return response.blob()
+}
 // helper: fetch dashboard-shaped stats from backend
 export const getDashboardStats = async () => {
   const [live, findings] = await Promise.all([
@@ -103,7 +116,7 @@ export const startAnalysis = async (file: File, vendor: string, framework: strin
   form.append('file', file)
   form.append('vendor', vendor)
   form.append('framework', framework)
-  const response = await fetch(`${API_URL}/analyses/upload`, { method: 'POST', body: form })
+  const response = await fetch(`${API_URL}/analyses/upload`, { method: 'POST', body: form, headers: authHeaders() })
   if (!response.ok) {
     const details = await response.json().catch(() => null)
     throw new Error(details?.detail ?? 'The compliance API could not analyze this file.')
@@ -162,9 +175,9 @@ export const getRemediations = async () => {
     finding: f.title,
     device: f.device,
     severity: f.severity,
-    type: 'Configuration Change',
+    type: f.evidence === 'No matching configuration evidence found' ? 'Review Required' : 'Configuration Change',
     command: f.remediationCommand ?? f.action ?? '',
-    status: 'Pending',
+    status: f.evidence === 'No matching configuration evidence found' ? 'Needs Review' : 'Pending',
   }))
 }
 
@@ -173,7 +186,7 @@ export const getTrainingItems = () => getLiveTrainingMappings()
 export const saveTrainingMapping = async (payload: Partial<TrainingItem>): Promise<TrainingItem> => {
   const response = await fetch(`${API_URL}/training-mappings`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({
       raw_command: payload.command ?? 'set management access legacy-protocol enable',
       vendor: payload.vendor ?? 'Unknown Vendor',
@@ -206,7 +219,7 @@ export const saveTrainingMapping = async (payload: Partial<TrainingItem>): Promi
 }
 
 export const applyTrainingMappings = async () => {
-  const response = await fetch(`${API_URL}/training-mappings/apply`, { method: 'POST' })
+  const response = await fetch(`${API_URL}/training-mappings/apply`, { method: 'POST', headers: authHeaders() })
   if (!response.ok) throw new Error('Could not apply training mappings')
   return response.json()
 }
@@ -216,13 +229,8 @@ export const getFrameworks = () => request<FrameworkDefinition[]>('/frameworks')
 export const getReports = () => getLiveReports()
 
 export const getAuditLogs = async () => {
-  // Derive a lightweight audit log view from training mappings and analyses
   try {
-    const mappings = await getLiveTrainingMappings()
-    const analyses = await getLiveAnalyses()
-    const mapLogs = (mappings || []).map((m: any, idx: number) => ({ id: `log-m-${idx}`, timestamp: m.created_at, user: 'Admin', action: 'AI mapping created', resource: m.raw_command, device: 'Unknown', result: 'Success', ipAddress: '127.0.0.1' }))
-    const analysisLogs = (analyses || []).slice(0, 20).map((a: any, idx: number) => ({ id: `log-a-${idx}`, timestamp: a.createdAt ?? a.created_at ?? new Date().toISOString(), user: 'System', action: 'Analysis completed', resource: a.fileName ?? a.filename ?? a.id, device: a.fileName?.replace(/\.[^.]+$/, '') ?? a.id, result: 'Success', ipAddress: '127.0.0.1' }))
-    return [...analysisLogs, ...mapLogs].sort((x, y) => new Date(y.timestamp).getTime() - new Date(x.timestamp).getTime())
+    return await request<any[]>('/audit-logs')
   } catch (e) {
     return []
   }
@@ -239,11 +247,11 @@ export const getUploadedFiles = async () => {
 
 export const rawUrl = (analysisId: string) => `${API_URL}/analyses/${analysisId}/raw`
 
-export const getStorageInfo = () => request<{ s3_configured: boolean; s3_bucket?: string }>('/storage-info')
+export const getStorageInfo = () => request<{ s3_configured: boolean; s3_bucket?: string; audit_events_configured?: boolean | null }>('/storage-info')
 
 export const reRunUploadedAnalysis = async (analysisId: string, framework = 'CIS Benchmarks') => {
   // download raw content then POST as a file to startAnalysis
-  const rawResponse = await fetch(rawUrl(analysisId))
+  const rawResponse = await fetch(rawUrl(analysisId), { headers: authHeaders() })
   if (!rawResponse.ok) throw new Error('Could not fetch raw uploaded file')
   const text = await rawResponse.text()
   const filename = `${analysisId}.cfg`

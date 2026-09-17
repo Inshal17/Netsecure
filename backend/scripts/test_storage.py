@@ -7,14 +7,43 @@ Run from the project root or backend folder. It will attempt to:
 This script is safe and performs non-destructive checks.
 """
 import os
-import sys
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(ROOT / '.env')
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 S3_BUCKET = os.getenv('S3_BUCKET')
 S3_ENDPOINT = os.getenv('S3_ENDPOINT')
+SUPABASE_URL = os.getenv('SUPABASE_URL')
+SUPABASE_BUCKET = os.getenv('SUPABASE_BUCKET', 'configurations')
 
-print('DATABASE_URL=', DATABASE_URL)
-print('S3_BUCKET=', S3_BUCKET)
+print('DATABASE_URL configured:', bool(DATABASE_URL))
+print('S3_BUCKET configured:', bool(S3_BUCKET))
+
+if SUPABASE_URL and os.getenv('SUPABASE_SECRET_KEY'):
+    try:
+        from supabase import create_client
+
+        client = create_client(SUPABASE_URL, os.getenv('SUPABASE_SECRET_KEY'))
+        print('Supabase URL configured:', True)
+        for table in ('analyses', 'mappings', 'audit_events'):
+            try:
+                rows = client.table(table).select('*').limit(1).execute().data or []
+                print(f'Supabase table {table}: OK ({len(rows)} sample rows)')
+            except Exception as exc:
+                print(f'Supabase table {table}: unavailable ({type(exc).__name__})')
+        try:
+            client.storage.from_(SUPABASE_BUCKET).list(path='', options={'limit': 1})
+            print(f'Supabase bucket {SUPABASE_BUCKET}: OK')
+        except Exception as exc:
+            print(f'Supabase bucket {SUPABASE_BUCKET}: unavailable ({type(exc).__name__})')
+    except Exception as exc:
+        print(f'Supabase client unavailable ({type(exc).__name__})')
+else:
+    print('Supabase credentials not configured; skipping Supabase test')
 
 if DATABASE_URL:
     try:

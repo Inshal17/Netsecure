@@ -10,9 +10,9 @@ function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation() as { state?: { from?: { pathname?: string } } }
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
-    const ok = login(username.trim(), password)
+    const ok = await login(username.trim(), password)
     if (ok) {
       const redirectTo = location.state?.from?.pathname ?? '/dashboard'
       navigate(redirectTo, { replace: true })

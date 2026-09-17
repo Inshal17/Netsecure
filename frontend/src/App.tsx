@@ -49,7 +49,7 @@ import {
 import LandingPage from './Landingpage'
 import LoginPage from './Loginpage'
 import RegisterPage from './Registerpage'
-import { isAuthenticated, logout } from './auth'
+import { getCurrentRole, isAuthenticated, logout } from './auth'
 
 import {
   getAnalysisJobs,
@@ -63,13 +63,13 @@ import {
   getLiveReports,
   getUploadedFiles,
   getRemediations,
-  reportUrl,
   getTrainingItems,
   saveTrainingMapping,
   applyTrainingMappings,
   startAnalysis,
   getStorageInfo,
   reRunUploadedAnalysis,
+  downloadReport,
 } from './services/api'
 
 // vendorOptions removed; use live devices to derive vendor list
@@ -257,6 +257,12 @@ function ProtectedRoute() {
   return <Outlet />
 }
 
+function RoleRoute({ allowed }: { allowed: string[] }) {
+  const role = getCurrentRole() ?? 'viewer'
+  const context = useOutletContext<LayoutContext>()
+  return allowed.includes(role) ? <Outlet context={context} /> : <Navigate to="/dashboard" replace />
+}
+
 function Layout() {
   const [searchTerm, setSearchTerm] = useState('')
   const [toasts, setToasts] = useState<Toast[]>([])
@@ -275,6 +281,7 @@ function Layout() {
   const notificationsRef = useRef<HTMLDivElement | null>(null)
   const location = useLocation()
   const navigate = useNavigate()
+  const role = getCurrentRole() ?? 'viewer'
 
   useEffect(() => {
     setMobileNavOpen(false)
@@ -388,11 +395,10 @@ function Layout() {
     {
       label: 'Administration',
       items: [
-        { to: '/training', label: 'Training', icon: UserCircle },
-        { to: '/frameworks', label: 'Frameworks', icon: ShieldCheck },
+        ...(role === 'admin' ? [{ to: '/training', label: 'Training', icon: UserCircle }, { to: '/frameworks', label: 'Frameworks', icon: ShieldCheck }] : []),
         { to: '/reports', label: 'Reports', icon: Activity },
         { to: '/audit-logs', label: 'Audit Logs', icon: Bell },
-        { to: '/settings', label: 'Settings', icon: X },
+        ...(role === 'admin' ? [{ to: '/settings', label: 'Settings', icon: X }] : []),
       ],
     },
   ]
@@ -523,7 +529,7 @@ function Layout() {
               </div>
               <button type="button" className="profile-pill" onClick={handleLogout} title="Sign out">
                 <UserCircle size={18} />
-                <span>Admin</span>
+                <span>{role}</span>
               </button>
             </div>
           </div>
@@ -1045,7 +1051,8 @@ function ConfigurationPage() {
   const [storageInfo, setStorageInfo] = useState<{ s3_configured: boolean; s3_bucket?: string } | null>(null)
   const [framework, setFramework] = useState('CIS Benchmarks')
   const [frameworkOptions, setFrameworkOptions] = useState<string[]>(['CIS Benchmarks', 'NIST SP 800-53', 'DISA STIG', 'ISO/IEC 27001'])
-  const [vendorOptionsState, setVendorOptions] = useState<string[]>(['Cisco'])
+  const supportedVendors = ['Cisco', 'Juniper', 'Arista', 'Fortinet', 'SONiC', 'Palo Alto', 'HPE Aruba', 'Extreme', 'MikroTik', 'Huawei', 'Check Point', 'Sophos', 'SonicWall', 'AWS', 'Azure', 'GCP']
+  const [vendorOptionsState, setVendorOptions] = useState<string[]>(supportedVendors)
   const [vendor, setVendor] = useState(vendorOptionsState[0] ?? 'Cisco')
   const [analysisDepth, setAnalysisDepth] = useState('Standard')
 
@@ -1078,7 +1085,6 @@ function ConfigurationPage() {
       const vendors = Array.from(new Set((items || []).map((d: any) => d.vendor).filter(Boolean)))
       if (vendors.length) {
         setVendorOptions((prev) => Array.from(new Set([...prev, ...vendors])))
-        setVendor(vendors[0])
       }
     }).catch(() => {})
     // load previously uploaded files and storage info
@@ -1729,6 +1735,12 @@ function FrameworksPage() {
                 </strong>
               </div>
             </div>
+            <p className="framework-scope">{framework.scope}</p>
+            <div className="framework-source-row">
+              <span>{framework.version}</span>
+              <span>{framework.reviewStatus}</span>
+              {framework.authorityUrl ? <a href={framework.authorityUrl} target="_blank" rel="noreferrer">Source</a> : null}
+            </div>
           </div>
         ))}
       </div>
@@ -1752,16 +1764,31 @@ function ReportsPage() {
     getAnalysisResult(selectedReport.id as string).then((d) => setReportDetails(d)).catch(() => setReportDetails(null))
   }, [selectedReport])
 
-  const exportFile = (type: 'PDF' | 'JSON' | 'CSV') => {
+  const exportFile = async (type: 'PDF' | 'JSON' | 'CSV') => {
     if (!selectedReport) return
     if (type === 'PDF') {
-      window.open(reportUrl(selectedReport.id), '_blank', 'noopener,noreferrer')
-      showToast('PDF report download started', 'success')
+      try {
+        const blob = await downloadReport(selectedReport.id)
+        const url = URL.createObjectURL(blob)
+        const anchor = document.createElement('a')
+        anchor.href = url
+        anchor.download = `${selectedReport.device}-compliance-report.pdf`
+        anchor.click()
+        URL.revokeObjectURL(url)
+        showToast('PDF report download started', 'success')
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : 'PDF report download failed.', 'warning')
+      }
       return
     }
-    const content = JSON.stringify(selectedReport, null, 2)
+    const content = type === 'JSON'
+      ? JSON.stringify(reportDetails ?? selectedReport, null, 2)
+      : [
+        ['Device', 'Vendor', 'Framework', 'Compliance Score', 'Generated Date', 'Status'],
+        [selectedReport.device, selectedReport.vendor, selectedReport.framework, `${selectedReport.complianceScore}%`, selectedReport.generatedDate, selectedReport.status],
+      ].map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n')
 
-    const blob = new Blob([content], { type: 'application/json;charset=utf-8' })
+    const blob = new Blob([content], { type: type === 'JSON' ? 'application/json;charset=utf-8' : 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
     anchor.href = url
@@ -2180,11 +2207,13 @@ function App() {
           <Route path="/findings" element={<FindingsPage />} />
           <Route path="/findings/:id" element={<FindingDetailsPage />} />
           <Route path="/remediation" element={<RemediationPage />} />
-          <Route path="/training" element={<TrainingPage />} />
-          <Route path="/frameworks" element={<FrameworksPage />} />
+          <Route element={<RoleRoute allowed={['admin']} />}>
+            <Route path="/training" element={<TrainingPage />} />
+            <Route path="/frameworks" element={<FrameworksPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route>
           <Route path="/reports" element={<ReportsPage />} />
           <Route path="/audit-logs" element={<AuditLogsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Route>
     </Routes>
