@@ -48,6 +48,33 @@ def test_frameworks_expose_source_and_review_metadata():
     assert nist["scope"]
 
 
+def test_mapping_suggestion_is_explainable_and_requires_approval():
+    client = TestClient(app)
+    response = client.post(
+        "/api/training-mappings/suggest",
+        json={
+            "raw_command": "set admin telnet disable",
+            "vendor": "Check Point",
+        },
+    )
+
+    assert response.status_code == 200
+    suggestion = response.json()
+    assert suggestion["field_name"] == "telnet_disabled"
+    assert suggestion["observed_value"] is True
+    assert suggestion["confidence_source"] == "keyword_heuristic"
+    assert suggestion["status"] == "Pending Approval"
+
+
+def test_mapping_suggestion_rejects_unclassifiable_commands():
+    response = TestClient(app).post(
+        "/api/training-mappings/suggest",
+        json={"raw_command": "set vendor proprietary feature enabled"},
+    )
+
+    assert response.status_code == 422
+
+
 def test_api_rate_limit_blocks_excess_requests(monkeypatch):
     monkeypatch.setenv("NETSECURE_API_RATE_LIMIT", "2")
     monkeypatch.setenv("NETSECURE_API_RATE_WINDOW_SECONDS", "60")

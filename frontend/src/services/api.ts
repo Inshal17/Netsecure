@@ -183,6 +183,27 @@ export const getRemediations = async () => {
 
 export const getTrainingItems = () => getLiveTrainingMappings()
 
+export const suggestTrainingMapping = async (payload: { command: string; vendor: string }) => {
+  const response = await fetch(`${API_URL}/training-mappings/suggest`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ raw_command: payload.command, vendor: payload.vendor }),
+  })
+  const details = await response.json().catch(() => null)
+  if (!response.ok) throw new Error(details?.detail ?? 'No explainable mapping could be suggested.')
+  return details as {
+    raw_command: string
+    vendor: string
+    field_name: string
+    observed_value: boolean | string
+    meaning: string
+    confidence: number
+    confidence_source: string
+    reason: string
+    status: string
+  }
+}
+
 export const saveTrainingMapping = async (payload: Partial<TrainingItem>): Promise<TrainingItem> => {
   const response = await fetch(`${API_URL}/training-mappings`, {
     method: 'POST',

@@ -383,6 +383,11 @@ class TrainingMapping(BaseModel):
     )
 
 
+class MappingSuggestionRequest(BaseModel):
+    raw_command: str = Field(min_length=1, max_length=2000)
+    vendor: str = Field(default="Unknown", max_length=100)
+
+
 class LoginRequest(BaseModel):
     username: str = Field(min_length=1, max_length=100)
     password: str = Field(min_length=1, max_length=200)
@@ -1843,6 +1848,41 @@ def infer_unknown_mapping(line: str, vendor: str | None = None) -> str | None:
     if "community" in text or "snmp" in text:
         return "snmp_secure"
     return None
+
+
+@app.post("/api/training-mappings/suggest")
+def suggest_training_mapping(
+    payload: MappingSuggestionRequest,
+) -> dict[str, Any]:
+    command = payload.raw_command.strip()
+    field_name = infer_unknown_mapping(command, payload.vendor)
+
+    if field_name is None:
+        raise HTTPException(
+            status_code=422,
+            detail="No explainable baseline mapping could be suggested for this command",
+        )
+
+    lowered = command.lower()
+    if field_name == "ssh_version":
+        version_match = re.search(r"(?:version|protocol-version)\s+([\w.-]+)", lowered)
+        observed_value: Any = version_match.group(1) if version_match else "unknown"
+    elif field_name.endswith("_disabled"):
+        observed_value = any(token in lowered for token in ("disable", "disabled", "no ", "undo "))
+    else:
+        observed_value = True
+
+    return {
+        "raw_command": command,
+        "vendor": payload.vendor.strip() or "Unknown",
+        "field_name": field_name,
+        "observed_value": observed_value,
+        "meaning": f"Explainable heuristic suggests this command controls {field_name}.",
+        "confidence": 72,
+        "confidence_source": "keyword_heuristic",
+        "reason": "Matched a known security keyword; reviewer approval is required before persistence.",
+        "status": "Pending Approval",
+    }
 
 
 def analyze(

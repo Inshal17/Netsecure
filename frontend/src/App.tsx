@@ -64,6 +64,7 @@ import {
   getUploadedFiles,
   getRemediations,
   getTrainingItems,
+  suggestTrainingMapping,
   saveTrainingMapping,
   applyTrainingMappings,
   startAnalysis,
@@ -1564,6 +1565,7 @@ function RemediationPage() {
 
 function TrainingPage() {
   const [items, setItems] = useState<TrainingItem[]>([])
+  const [suggestion, setSuggestion] = useState<string | null>(null)
   const { showToast } = useOutletContext<LayoutContext>()
 
   useEffect(() => { getTrainingItems().then((res) => setItems(res as TrainingItem[])).catch(() => {}) }, [])
@@ -1609,6 +1611,23 @@ function TrainingPage() {
     }
   }
 
+  const handleSuggest = async () => {
+    try {
+      const result = await suggestTrainingMapping({ command: form.command, vendor: form.vendor })
+      setForm((current) => ({
+        ...current,
+        parameter: result.field_name,
+        meaning: result.meaning,
+        confidence: String(result.confidence),
+        observedValue: String(result.observed_value),
+      }))
+      setSuggestion(`${result.status}: ${result.reason}`)
+    } catch (error) {
+      setSuggestion(null)
+      showToast(error instanceof Error ? error.message : 'No mapping suggestion available.', 'warning')
+    }
+  }
+
   return (
     <div className="page-stack">
       <div className="panel training-panel">
@@ -1616,6 +1635,8 @@ function TrainingPage() {
         <div className="unknown-box">
           <p>Raw command:</p>
           <input value={form.command} onChange={(event) => setForm((current) => ({ ...current, command: event.target.value }))} aria-label="Raw unknown command" />
+          <button type="button" className="secondary-button" onClick={handleSuggest}>Suggest Mapping</button>
+          {suggestion ? <small>{suggestion}</small> : null}
         </div>
 
         <div className="training-form-grid">
