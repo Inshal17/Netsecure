@@ -536,6 +536,18 @@ CONTROL_VENDOR_APPLICABILITY = {
     "Arista": COMMON_CONTROL_FIELDS,
     "SONiC": COMMON_CONTROL_FIELDS,
     "Fortinet": COMMON_CONTROL_FIELDS,
+    "Palo Alto": COMMON_CONTROL_FIELDS | {
+        "source_routing_disabled",
+        "proxy_arp_disabled",
+        "ssh_rate_limit",
+        "login_attempts",
+    },
+    "HPE Aruba": COMMON_CONTROL_FIELDS | {
+        "source_routing_disabled",
+        "proxy_arp_disabled",
+        "ssh_rate_limit",
+        "login_attempts",
+    },
 }
 
 CONTROL_REFERENCES = {
@@ -791,6 +803,22 @@ def detect_vendor(
         or "fortigate" in lower
     ):
         return "Fortinet"
+
+    if (
+        "set deviceconfig system" in lower
+        or "deviceconfig system" in lower
+        or "set network virtual-router" in lower
+        or "set zone" in lower
+    ):
+        return "Palo Alto"
+
+    if (
+        "no telnet-server" in lower
+        or "aaa authentication-server" in lower
+        or "ip ssh version" in lower and "hostname sw-" in lower
+        or "ip http server" in lower and "hostname" in lower
+    ):
+        return "HPE Aruba"
 
     if (
         "set system" in lower
@@ -1263,6 +1291,52 @@ def parse_known(
                     "deterministic",
                 )
 
+                recognized.add(text)
+
+        elif vendor == "Palo Alto":
+            if "ssh version" in lower and "deviceconfig system" in lower:
+                if re.search(r"ssh version\s+(\d+)", lower):
+                    set_field(baseline, "ssh_version", re.search(r"ssh version\s+(\d+)", lower).group(1), text, 95, "deterministic")
+                    recognized.add(text)
+
+            elif "service disable telnet" in lower or "service disable webserver" in lower:
+                if "telnet" in lower:
+                    set_field(baseline, "telnet_disabled", True, text, 95, "deterministic")
+                if "webserver" in lower:
+                    set_field(baseline, "http_disabled", True, text, 95, "deterministic")
+                recognized.add(text)
+
+            elif "ntp servers" in lower and "deviceconfig system" in lower:
+                set_field(baseline, "ntp_configured", True, text, 90, "deterministic")
+                recognized.add(text)
+
+            elif "logging" in lower and "deviceconfig system" in lower:
+                set_field(baseline, "logging_enabled", True, text, 90, "deterministic")
+                recognized.add(text)
+
+        elif vendor == "HPE Aruba":
+            if re.search(r"^ip ssh version\s+(\d+)", lower):
+                set_field(baseline, "ssh_version", re.search(r"^ip ssh version\s+(\d+)", lower).group(1), text, 95, "deterministic")
+                recognized.add(text)
+
+            elif lower == "no telnet-server":
+                set_field(baseline, "telnet_disabled", True, text, 95, "deterministic")
+                recognized.add(text)
+
+            elif lower == "no ip http server":
+                set_field(baseline, "http_disabled", True, text, 95, "deterministic")
+                recognized.add(text)
+
+            elif "aaa authentication-server" in lower:
+                set_field(baseline, "aaa_enabled", True, text, 92, "deterministic")
+                recognized.add(text)
+
+            elif lower.startswith("logging "):
+                set_field(baseline, "logging_enabled", True, text, 90, "deterministic")
+                recognized.add(text)
+
+            elif lower.startswith("sntp server ") or lower.startswith("ntp server "):
+                set_field(baseline, "ntp_configured", True, text, 90, "deterministic")
                 recognized.add(text)
 
         # ----------------------------------------------------

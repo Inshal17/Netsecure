@@ -166,6 +166,34 @@ def test_fortinet_security_controls_are_extracted():
     assert {"telnet_disabled", "http_disabled", "ssh_version", "aaa_enabled", "snmp_secure"} <= fields(result, "Pass")
 
 
+def test_palo_alto_and_aruba_vendor_variants_are_detected_and_parsed():
+    palo = analyze(
+        "paloalto.cfg",
+        "set deviceconfig system ssh version 2\n"
+        "set deviceconfig system service disable telnet\n"
+        "set deviceconfig system service disable webserver\n"
+        "set deviceconfig system ntp servers primary 10.0.0.10\n",
+        "CIS Benchmarks",
+        "Auto",
+    )
+    aruba = analyze(
+        "aruba.cfg",
+        "hostname sw-01\n"
+        "ip ssh version 2\n"
+        "no telnet-server\n"
+        "no ip http server\n"
+        "aaa authentication-server radius\n"
+        "logging 10.0.0.20\n",
+        "CIS Benchmarks",
+        "Auto",
+    )
+
+    assert palo["vendor"] == "Palo Alto"
+    assert {"ssh_version", "telnet_disabled", "http_disabled", "ntp_configured"} <= fields(palo, "Pass")
+    assert aruba["vendor"] == "HPE Aruba"
+    assert {"ssh_version", "telnet_disabled", "http_disabled", "aaa_enabled", "logging_enabled"} <= fields(aruba, "Pass")
+
+
 def test_malformed_and_large_configurations_do_not_crash():
     malformed = analyze("malformed.cfg", "\x00\xff\nconfig system { ???\n", "CIS Benchmarks", "Auto")
     large = analyze("large.cfg", ("set unknown syntax enabled\n" * 5000), "CIS Benchmarks", "Auto")
