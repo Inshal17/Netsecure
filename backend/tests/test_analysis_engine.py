@@ -194,6 +194,34 @@ def test_palo_alto_and_aruba_vendor_variants_are_detected_and_parsed():
     assert {"ssh_version", "telnet_disabled", "http_disabled", "aaa_enabled", "logging_enabled"} <= fields(aruba, "Pass")
 
 
+def test_huawei_and_checkpoint_vendor_variants_are_detected_and_parsed():
+    huawei = analyze(
+        "huawei.cfg",
+        "sysname core-r1\n"
+        "undo telnet server enable\n"
+        "undo http server enable\n"
+        "ssh server version 2\n"
+        "ntp-service enable\n",
+        "CIS Benchmarks",
+        "Auto",
+    )
+    checkpoint = analyze(
+        "checkpoint.cfg",
+        "set hostname fw-core\n"
+        "set ssh version 2\n"
+        "set admin telnet disable\n"
+        "set snmp community public\n"
+        "set ntp server 10.0.0.20\n",
+        "CIS Benchmarks",
+        "Auto",
+    )
+
+    assert huawei["vendor"] == "Huawei"
+    assert {"telnet_disabled", "http_disabled", "ssh_version", "ntp_configured"} <= fields(huawei, "Pass")
+    assert checkpoint["vendor"] == "Check Point"
+    assert {"ssh_version", "telnet_disabled", "ntp_configured"} <= fields(checkpoint, "Pass")
+
+
 def test_malformed_and_large_configurations_do_not_crash():
     malformed = analyze("malformed.cfg", "\x00\xff\nconfig system { ???\n", "CIS Benchmarks", "Auto")
     large = analyze("large.cfg", ("set unknown syntax enabled\n" * 5000), "CIS Benchmarks", "Auto")

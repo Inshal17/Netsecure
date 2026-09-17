@@ -548,6 +548,18 @@ CONTROL_VENDOR_APPLICABILITY = {
         "ssh_rate_limit",
         "login_attempts",
     },
+    "Huawei": COMMON_CONTROL_FIELDS | {
+        "source_routing_disabled",
+        "proxy_arp_disabled",
+        "ssh_rate_limit",
+        "login_attempts",
+    },
+    "Check Point": COMMON_CONTROL_FIELDS | {
+        "source_routing_disabled",
+        "proxy_arp_disabled",
+        "ssh_rate_limit",
+        "login_attempts",
+    },
 }
 
 CONTROL_REFERENCES = {
@@ -819,6 +831,22 @@ def detect_vendor(
         or "ip http server" in lower and "hostname" in lower
     ):
         return "HPE Aruba"
+
+    if (
+        "sysname" in lower
+        or "undo telnet server enable" in lower
+        or "undo http server enable" in lower
+        or "ntp-service enable" in lower
+    ):
+        return "Huawei"
+
+    if (
+        "set hostname" in lower
+        or "set admin telnet" in lower
+        or "set ssh version" in lower
+        or "cp-" in lower
+    ):
+        return "Check Point"
 
     if (
         "set system" in lower
@@ -1337,6 +1365,44 @@ def parse_known(
 
             elif lower.startswith("sntp server ") or lower.startswith("ntp server "):
                 set_field(baseline, "ntp_configured", True, text, 90, "deterministic")
+                recognized.add(text)
+
+        elif vendor == "Huawei":
+            if lower.startswith("undo telnet server enable"):
+                set_field(baseline, "telnet_disabled", True, text, 95, "deterministic")
+                recognized.add(text)
+            elif lower.startswith("undo http server enable"):
+                set_field(baseline, "http_disabled", True, text, 95, "deterministic")
+                recognized.add(text)
+            elif lower.startswith("ssh server version "):
+                match = re.search(r"ssh server version\s+(\d+)", lower)
+                if match:
+                    set_field(baseline, "ssh_version", match.group(1), text, 95, "deterministic")
+                    recognized.add(text)
+            elif lower.startswith("ntp-service enable"):
+                set_field(baseline, "ntp_configured", True, text, 90, "deterministic")
+                recognized.add(text)
+            elif lower.startswith("logging "):
+                set_field(baseline, "logging_enabled", True, text, 90, "deterministic")
+                recognized.add(text)
+
+        elif vendor == "Check Point":
+            if lower.startswith("set ssh version "):
+                match = re.search(r"set ssh version\s+(\d+)", lower)
+                if match:
+                    set_field(baseline, "ssh_version", match.group(1), text, 95, "deterministic")
+                    recognized.add(text)
+            elif "set admin telnet disable" in lower:
+                set_field(baseline, "telnet_disabled", True, text, 95, "deterministic")
+                recognized.add(text)
+            elif "set admin http disable" in lower or "set web ssl disable" in lower:
+                set_field(baseline, "http_disabled", True, text, 90, "deterministic")
+                recognized.add(text)
+            elif "set ntp server" in lower:
+                set_field(baseline, "ntp_configured", True, text, 90, "deterministic")
+                recognized.add(text)
+            elif "set snmp" in lower:
+                set_field(baseline, "snmp_secure", True, text, 90, "deterministic")
                 recognized.add(text)
 
         # ----------------------------------------------------
