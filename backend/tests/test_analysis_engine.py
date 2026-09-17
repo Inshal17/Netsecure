@@ -252,6 +252,17 @@ def test_analysis_has_reproducible_evidence_hash():
     assert result["hashAlgorithm"] == "SHA-256"
 
 
+def test_analysis_exposes_evidence_quality_summary():
+    result = analyze("evidence.cfg", CISCO_SECURE, "CIS Benchmarks", "Auto")
+
+    summary = result["evidenceSummary"]
+    assert summary["controlsWithEvidence"] > 0
+    assert summary["controlsWithoutEvidence"] > 0
+    assert summary["deterministicControls"] == summary["controlsWithEvidence"]
+    assert summary["trainedMappingControls"] == 0
+    assert 0 <= summary["averageConfidence"] <= 100
+
+
 def test_training_mapping_provenance_is_exposed(monkeypatch):
     monkeypatch.setattr(
         main,

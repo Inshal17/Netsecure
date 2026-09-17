@@ -1923,6 +1923,28 @@ def analyze(
         )
     }
 
+    evidence_summary = {
+        "controlsWithEvidence": sum(
+            control["evidence"] != "No matching configuration evidence found"
+            for control in controls
+        ),
+        "controlsWithoutEvidence": sum(
+            control["evidence"] == "No matching configuration evidence found"
+            for control in controls
+        ),
+        "deterministicControls": sum(
+            control["evidenceSource"] == "deterministic"
+            for control in controls
+        ),
+        "trainedMappingControls": sum(
+            control["evidenceSource"] == "trained_mapping"
+            for control in controls
+        ),
+        "averageConfidence": round(
+            sum(control["confidence"] for control in controls) / len(controls)
+        ) if controls else 0,
+    }
+
     if score >= 85:
         risk = "Low"
     elif score >= 65:
@@ -2023,6 +2045,9 @@ def analyze(
 
         "warnings":
             counts["Warning"],
+
+        "evidenceSummary":
+            evidence_summary,
 
         "baseline":
             baseline,
