@@ -31,3 +31,4 @@ backend/.env
 
 backend/venv/
 backend/data/uploads/
+blockchain/chaincode/evidence/vendor/

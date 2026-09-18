@@ -13,3 +13,6 @@ alembic>=1.12
 
 # Test runner for CI
 pytest>=7.0
+
+pydantic
+requests

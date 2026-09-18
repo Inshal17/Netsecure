@@ -35,6 +35,7 @@ from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
+from requests import RequestException
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
@@ -45,6 +46,9 @@ from reportlab.platypus import (
     Table,
     TableStyle,
 )
+
+from backend.blockchain.fabric_client import anchor_record, verify_record
+from backend.blockchain.models import AnchorRequest, VerificationRequest
 
 try:
     create_client = importlib.import_module("supabase").create_client
@@ -2265,6 +2269,50 @@ def health() -> dict[str, Any]:
     return {
         "status": "operational",
     }
+
+
+@app.post("/api/blockchain/anchor")
+def blockchain_anchor(request: AnchorRequest) -> dict[str, Any]:
+    try:
+        return anchor_record(
+            record_id=uuid.uuid4().hex,
+            record_type=request.record_type,
+            analysis_id=request.analysis_id,
+            payload=request.payload,
+            device_id=request.device_id,
+            vendor=request.vendor,
+            framework=request.framework,
+            actor=request.actor,
+        )
+    except RequestException as error:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Blockchain gateway request failed: {error}",
+        ) from error
+
+
+@app.post("/api/blockchain/verify/{record_id}")
+def blockchain_verify(
+    record_id: str,
+    request: VerificationRequest,
+) -> dict[str, Any]:
+    try:
+        return verify_record(
+            record_id=record_id,
+            record_type=request.record_type,
+            analysis_id=request.analysis_id,
+            payload=request.payload,
+            device_id=request.device_id,
+            vendor=request.vendor,
+            framework=request.framework,
+            actor=request.actor,
+            previous_hash=request.previous_hash,
+        )
+    except RequestException as error:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Blockchain gateway request failed: {error}",
+        ) from error
 
 
 @app.post("/api/auth/login")
