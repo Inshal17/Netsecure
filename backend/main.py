@@ -1895,6 +1895,32 @@ def infer_unknown_mapping(line: str, vendor: str | None = None) -> str | None:
     return None
 
 
+def retrieve_mapping_knowledge(field_name: str) -> dict[str, Any]:
+    requirement = next(
+        (
+            requirement
+            for field, requirement, *_ in CONTROL_CATALOG
+            if field == field_name
+        ),
+        "Review the vendor-specific security configuration.",
+    )
+    references = CONTROL_REFERENCES.get(field_name, {})
+    sources = [
+        {
+            "framework": framework_id,
+            "reference": reference,
+            "sourceUrl": FRAMEWORK_METADATA.get(framework_id, {}).get("authorityUrl", ""),
+        }
+        for framework_id, reference in references.items()
+    ]
+    return {
+        "control": field_name,
+        "requirement": requirement,
+        "references": sources,
+        "retrievalMethod": "Curated control catalog and framework crosswalk",
+    }
+
+
 @app.post("/api/training-mappings/suggest")
 def suggest_training_mapping(
     payload: MappingSuggestionRequest,
@@ -1907,6 +1933,8 @@ def suggest_training_mapping(
             status_code=422,
             detail="No explainable baseline mapping could be suggested for this command",
         )
+
+    knowledge = retrieve_mapping_knowledge(field_name)
 
     lowered = command.lower()
     if field_name == "ssh_version":
@@ -1926,6 +1954,7 @@ def suggest_training_mapping(
         "confidence": 72,
         "confidence_source": "keyword_heuristic",
         "reason": "Matched a known security keyword; reviewer approval is required before persistence.",
+        "knowledge": knowledge,
         "status": "Pending Approval",
     }
 

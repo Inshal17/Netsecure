@@ -110,6 +110,7 @@ The project includes:
 - deterministic rule evaluation
 - heuristic suggestions for unknown vendor commands
 - explainable mapping suggestions that require reviewer approval
+- grounded mapping context with framework references and source URLs
 - approval-triggered re-analysis for previously saved configurations
 - stored training mappings that can be reused across re-analysis
 - per-control mapping provenance and confidence values

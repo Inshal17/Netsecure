@@ -104,6 +104,8 @@ def test_mapping_suggestion_is_explainable_and_requires_approval():
     assert suggestion["observed_value"] is True
     assert suggestion["confidence_source"] == "keyword_heuristic"
     assert suggestion["status"] == "Pending Approval"
+    assert suggestion["knowledge"]["control"] == "telnet_disabled"
+    assert suggestion["knowledge"]["references"][0]["sourceUrl"].startswith("https://")
 
 
 def test_mapping_suggestion_rejects_unclassifiable_commands():

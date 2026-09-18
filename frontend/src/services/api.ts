@@ -210,6 +210,12 @@ export const suggestTrainingMapping = async (payload: { command: string; vendor:
     confidence_source: string
     reason: string
     status: string
+    knowledge: {
+      control: string
+      requirement: string
+      retrievalMethod: string
+      references: Array<{ framework: string; reference: string; sourceUrl: string }>
+    }
   }
 }
 

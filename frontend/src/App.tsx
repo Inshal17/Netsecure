@@ -1569,6 +1569,7 @@ function TrainingPage() {
   const [items, setItems] = useState<TrainingItem[]>([])
   const [queue, setQueue] = useState<Array<{ analysisId: string; fileName: string; vendor: string; rawCommand: string; suggestedField: string | null; suggestionConfidence: number; status: string }>>([])
   const [suggestion, setSuggestion] = useState<string | null>(null)
+  const [grounding, setGrounding] = useState<{ requirement: string; retrievalMethod: string; references: Array<{ framework: string; reference: string; sourceUrl: string }> } | null>(null)
   const { showToast } = useOutletContext<LayoutContext>()
 
   useEffect(() => { getTrainingItems().then((res) => setItems(res as TrainingItem[])).catch(() => {}) }, [])
@@ -1626,9 +1627,11 @@ function TrainingPage() {
         confidence: String(result.confidence),
         observedValue: String(result.observed_value),
       }))
+      setGrounding(result.knowledge)
       setSuggestion(`${result.status}: ${result.reason}`)
     } catch (error) {
       setSuggestion(null)
+      setGrounding(null)
       showToast(error instanceof Error ? error.message : 'No mapping suggestion available.', 'warning')
     }
   }
@@ -1667,6 +1670,7 @@ function TrainingPage() {
           <input value={form.command} onChange={(event) => setForm((current) => ({ ...current, command: event.target.value }))} aria-label="Raw unknown command" />
           <button type="button" className="secondary-button" onClick={handleSuggest}>Suggest Mapping</button>
           {suggestion ? <small>{suggestion}</small> : null}
+          {grounding ? <small>Grounding: {grounding.requirement} ({grounding.references.map((reference) => `${reference.framework} ${reference.reference}`).join(', ')})</small> : null}
         </div>
 
         <div className="training-form-grid">
