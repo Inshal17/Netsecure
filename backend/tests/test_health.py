@@ -62,6 +62,32 @@ def test_vendor_catalog_distinguishes_available_and_planned_support():
     assert cloud_firewall["supportLevel"] == "AI-assisted mapping"
 
 
+def test_training_queue_exposes_unknown_commands_with_suggestions(tmp_path, monkeypatch):
+    database = tmp_path / "queue.sqlite3"
+    with sqlite3.connect(database) as connection:
+        connection.executescript(
+            """
+            CREATE TABLE analyses (
+                id TEXT PRIMARY KEY, filename TEXT, vendor TEXT, framework TEXT,
+                created_at TEXT, result_json TEXT, upload_url TEXT
+            );
+            """
+        )
+        connection.execute(
+            "INSERT INTO analyses VALUES (?, ?, ?, ?, ?, ?, ?)",
+            ("analysis-1", "router.cfg", "Cisco", "CIS Benchmarks", "2026-01-01", '{"unknownLines":["set custom telnet disabled"]}', ""),
+        )
+    monkeypatch.setattr(main, "LOCAL_DB", database)
+    monkeypatch.setattr(main, "supabase", None)
+
+    response = TestClient(app).get("/api/training-queue")
+    assert response.status_code == 200
+    item = response.json()[0]
+    assert item["rawCommand"] == "set custom telnet disabled"
+    assert item["suggestedField"] == "telnet_disabled"
+    assert item["status"] == "Suggested"
+
+
 def test_mapping_suggestion_is_explainable_and_requires_approval():
     client = TestClient(app)
     response = client.post(

@@ -3445,6 +3445,32 @@ def get_analysis(
 # TRAINING MAPPINGS - LIST
 # ============================================================
 
+@app.get("/api/training-queue")
+def training_queue() -> list[dict[str, Any]]:
+    queue: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+
+    for analysis in all_analyses():
+        vendor = analysis.get("vendor", "Unknown")
+        analysis_id = analysis.get("id", "")
+        for command in analysis.get("unknownLines", []):
+            key = (vendor, command)
+            if key in seen:
+                continue
+            seen.add(key)
+            field_name = infer_unknown_mapping(command, vendor)
+            queue.append({
+                "analysisId": analysis_id,
+                "fileName": analysis.get("fileName", "Unknown"),
+                "vendor": vendor,
+                "rawCommand": command,
+                "suggestedField": field_name,
+                "suggestionConfidence": 72 if field_name else 0,
+                "status": "Suggested" if field_name else "Needs Review",
+            })
+
+    return queue[:100]
+
 @app.get(
     "/api/training-mappings"
 )

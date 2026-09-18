@@ -65,6 +65,7 @@ import {
   getUploadedFiles,
   getRemediations,
   getTrainingItems,
+  getTrainingQueue,
   suggestTrainingMapping,
   saveTrainingMapping,
   applyTrainingMappings,
@@ -1566,10 +1567,12 @@ function RemediationPage() {
 
 function TrainingPage() {
   const [items, setItems] = useState<TrainingItem[]>([])
+  const [queue, setQueue] = useState<Array<{ analysisId: string; fileName: string; vendor: string; rawCommand: string; suggestedField: string | null; suggestionConfidence: number; status: string }>>([])
   const [suggestion, setSuggestion] = useState<string | null>(null)
   const { showToast } = useOutletContext<LayoutContext>()
 
   useEffect(() => { getTrainingItems().then((res) => setItems(res as TrainingItem[])).catch(() => {}) }, [])
+  useEffect(() => { getTrainingQueue().then(setQueue).catch(() => {}) }, [])
   const [form, setForm] = useState({
     command: 'set management access legacy-protocol enable',
     vendor: 'Unknown Vendor',
@@ -1603,6 +1606,7 @@ function TrainingPage() {
       try {
         showToast('Applying mapping to existing analyses…', 'info')
         await applyTrainingMappings()
+        setQueue((current) => current.filter((item) => !(item.vendor === form.vendor && item.rawCommand === form.command)))
         showToast('Mappings applied to stored analyses', 'success')
       } catch (err) {
         showToast('Saved mapping but could not apply to stored analyses', 'warning')
@@ -1629,8 +1633,33 @@ function TrainingPage() {
     }
   }
 
+  const selectQueueItem = (item: typeof queue[number]) => {
+    setForm((current) => ({ ...current, command: item.rawCommand, vendor: item.vendor, parameter: item.suggestedField ?? current.parameter, confidence: String(item.suggestionConfidence || current.confidence) }))
+    setSuggestion(item.suggestedField ? `Suggested from ${item.fileName}: review before approval.` : `Review required from ${item.fileName}.`)
+  }
+
   return (
     <div className="page-stack">
+      <div className="panel">
+        <SectionHeader title="Unknown Command Queue" />
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th>Command</th><th>Vendor</th><th>Source</th><th>Suggestion</th><th>Status</th></tr></thead>
+            <tbody>
+              {queue.map((item) => (
+                <tr key={`${item.vendor}-${item.rawCommand}`} className="clickable-row" onClick={() => selectQueueItem(item)}>
+                  <td>{item.rawCommand}</td>
+                  <td>{item.vendor}</td>
+                  <td>{item.fileName}</td>
+                  <td>{item.suggestedField ?? 'No suggestion'}</td>
+                  <td><StatusBadge status={item.status === 'Suggested' ? 'Needs Review' : 'Warning'} /></td>
+                </tr>
+              ))}
+              {!queue.length ? <tr><td colSpan={5} className="empty-cell">No unknown commands are waiting for review.</td></tr> : null}
+            </tbody>
+          </table>
+        </div>
+      </div>
       <div className="panel training-panel">
         <h3>UNKNOWN CONFIGURATION</h3>
         <div className="unknown-box">
@@ -1689,7 +1718,7 @@ function TrainingPage() {
 
         <div className="training-buttons">
           <button type="button" className="primary-button" onClick={handleSave}>Save Mapping</button>
-          <button type="button" className="secondary-button" onClick={() => showToast('Training entry rejected', 'warning')}>Reject</button>
+          <button type="button" className="secondary-button" onClick={() => { setQueue((current) => current.filter((item) => !(item.vendor === form.vendor && item.rawCommand === form.command))); showToast('Training entry rejected for this review session', 'warning') }}>Reject</button>
           <button type="button" className="ghost-button" onClick={() => showToast('Entry flagged for review', 'info')}>Mark for Review</button>
         </div>
       </div>

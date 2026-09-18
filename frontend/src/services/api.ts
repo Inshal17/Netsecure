@@ -182,6 +182,15 @@ export const getRemediations = async () => {
 }
 
 export const getTrainingItems = () => getLiveTrainingMappings()
+export const getTrainingQueue = () => request<Array<{
+  analysisId: string
+  fileName: string
+  vendor: string
+  rawCommand: string
+  suggestedField: string | null
+  suggestionConfidence: number
+  status: string
+}>>('/training-queue')
 
 export const suggestTrainingMapping = async (payload: { command: string; vendor: string }) => {
   const response = await fetch(`${API_URL}/training-mappings/suggest`, {

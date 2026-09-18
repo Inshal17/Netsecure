@@ -85,6 +85,7 @@ These control fields are evaluated with evidence and mapped to compliance framew
 - evidence hashing and reproducible output
 - health, dashboard, findings, reports, and frameworks APIs
 - vendor support matrix and explainable mapping suggestion APIs
+- unknown-command training queue sourced from saved analyses
 - PDF report generation
 - authentication and authorization support
 - rate limiting and request identity tracking
@@ -109,6 +110,7 @@ The project includes:
 - deterministic rule evaluation
 - heuristic suggestions for unknown vendor commands
 - explainable mapping suggestions that require reviewer approval
+- approval-triggered re-analysis for previously saved configurations
 - stored training mappings that can be reused across re-analysis
 - per-control mapping provenance and confidence values
 
