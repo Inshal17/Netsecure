@@ -497,8 +497,7 @@ def local_rows(query: str, parameters: tuple[Any, ...] = ()) -> list[dict[str, A
 
 
 def ensure_local_audit_table() -> None:
-    if not LOCAL_DB.exists():
-        return
+    LOCAL_DB.parent.mkdir(parents=True, exist_ok=True)
 
     with sqlite3.connect(LOCAL_DB) as connection:
         columns = {
@@ -626,8 +625,7 @@ class TrainingMapping(BaseModel):
     review_status: str = "Approved"
     review_reason: str | None = None
 def ensure_local_mapping_columns() -> None:
-    if not LOCAL_DB.exists():
-        return
+    LOCAL_DB.parent.mkdir(parents=True, exist_ok=True)
 
     with sqlite3.connect(LOCAL_DB) as connection:
         columns = {
