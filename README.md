@@ -32,15 +32,19 @@ Upload config file
 
 ## Supported vendors and parsing coverage
 
-The parser currently recognizes and evaluates major network vendor syntaxes, including:
+The parser currently recognizes and evaluates these vendor syntaxes with deterministic rules and evidence:
 
 - Cisco IOS-style configuration
 - Juniper Junos-like configuration
 - Arista EOS configuration
 - Fortinet configuration
 - SONiC configuration
+- Palo Alto configuration
+- HPE Aruba configuration
+- Huawei configuration
+- Check Point configuration
 
-Additional vendor families can be added through the training and heuristic mapping pipeline.
+The `/api/vendors` endpoint and Frameworks page expose the support matrix. Planned vendor and cloud-platform families are explicitly marked as AI-assisted mapping rather than being presented as fully supported.
 
 ## Framework coverage
 
@@ -80,6 +84,7 @@ These control fields are evaluated with evidence and mapped to compliance framew
 - compliance evaluation engine
 - evidence hashing and reproducible output
 - health, dashboard, findings, reports, and frameworks APIs
+- vendor support matrix and explainable mapping suggestion APIs
 - PDF report generation
 - authentication and authorization support
 - rate limiting and request identity tracking
@@ -94,6 +99,7 @@ These control fields are evaluated with evidence and mapped to compliance framew
 - framework overview
 - report export actions
 - training page for unknown command mapping
+- vendor support matrix for implementation and review status
 
 ### Data and mapping logic
 
@@ -102,6 +108,7 @@ The project includes:
 - evidence-based compliance findings
 - deterministic rule evaluation
 - heuristic suggestions for unknown vendor commands
+- explainable mapping suggestions that require reviewer approval
 - stored training mappings that can be reused across re-analysis
 - per-control mapping provenance and confidence values
 
@@ -181,7 +188,7 @@ The project was validated with real checks:
 
 - Backend test suite passed with:
   `PYTHONPATH=. pytest -q backend/tests`
-  Result: 27 passed
+  Result: 32 passed
 
 - Frontend production build passed with:
   `npm run build -- --emptyOutDir`

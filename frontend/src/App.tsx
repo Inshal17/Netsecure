@@ -56,6 +56,7 @@ import {
   getAnalysisResult,
   getAuditLogs,
   getFrameworks,
+  getVendors,
   getLiveDashboard,
   getLiveDevices,
   getLiveFindings,
@@ -1730,8 +1731,10 @@ function TrainingPage() {
 
 function FrameworksPage() {
   const [frameworks, setFrameworks] = useState<FrameworkDefinition[]>([])
+  const [vendors, setVendors] = useState<Array<{ name: string; category: string; supportLevel: string; mappingMode: string; status: string }>>([])
 
   useEffect(() => { getFrameworks().then((res) => setFrameworks(res as FrameworkDefinition[])).catch(() => {}) }, [])
+  useEffect(() => { getVendors().then(setVendors).catch(() => {}) }, [])
 
   return (
     <div className="page-stack">
@@ -1764,6 +1767,27 @@ function FrameworksPage() {
             </div>
           </div>
         ))}
+      </div>
+      <div className="panel">
+        <SectionHeader title="Vendor Support Matrix" />
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Vendor or platform</th><th>Category</th><th>Support</th><th>Method</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              {vendors.map((vendor) => (
+                <tr key={vendor.name}>
+                  <td>{vendor.name}</td>
+                  <td>{vendor.category}</td>
+                  <td>{vendor.supportLevel}</td>
+                  <td>{vendor.mappingMode}</td>
+                  <td><StatusBadge status={vendor.status === 'Available' ? 'Active' : 'Needs Review'} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )

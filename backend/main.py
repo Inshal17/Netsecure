@@ -630,6 +630,51 @@ FRAMEWORK_METADATA = {
     },
 }
 
+VENDOR_SUPPORT = [
+    {
+        "name": name,
+        "category": category,
+        "supportLevel": "Deterministic parser",
+        "mappingMode": "Rules and evidence",
+        "status": "Available",
+    }
+    for name, category in (
+        ("Cisco", "Router, switch, firewall"),
+        ("Juniper", "Router, switch, firewall"),
+        ("Arista", "Switch, router"),
+        ("SONiC", "White-box switch"),
+        ("Fortinet", "Firewall"),
+        ("Palo Alto", "Firewall"),
+        ("HPE Aruba", "Switch, wireless"),
+        ("Huawei", "Router, switch"),
+        ("Check Point", "Firewall"),
+    )
+] + [
+    {
+        "name": name,
+        "category": category,
+        "supportLevel": "AI-assisted mapping",
+        "mappingMode": "Heuristic suggestion and review",
+        "status": "Planned",
+    }
+    for name, category in (
+        ("Sophos", "Firewall"),
+        ("SonicWall", "Firewall"),
+        ("WatchGuard", "Firewall"),
+        ("Barracuda", "Firewall, SASE"),
+        ("Zscaler", "SASE"),
+        ("AWS Network Firewall", "Cloud firewall"),
+        ("Azure Firewall", "Cloud firewall"),
+        ("Google Cloud Firewall", "Cloud firewall"),
+        ("MikroTik", "Router, switch"),
+        ("Ubiquiti", "Router, switch, wireless"),
+        ("Extreme", "Switch, wireless"),
+        ("NVIDIA Cumulus", "Disaggregated networking"),
+        ("Dell SONiC", "White-box switch"),
+        ("Nokia", "Router, switch"),
+    )
+]
+
 
 # ============================================================
 # REMEDIATION COMMANDS
@@ -3260,6 +3305,10 @@ def reports() -> list[
 # ============================================================
 # FRAMEWORKS
 # ============================================================
+
+@app.get("/api/vendors")
+def list_vendors() -> list[dict[str, Any]]:
+    return VENDOR_SUPPORT
 
 @app.get("/api/frameworks")
 def list_frameworks() -> list[

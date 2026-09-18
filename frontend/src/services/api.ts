@@ -246,6 +246,13 @@ export const applyTrainingMappings = async () => {
 }
 
 export const getFrameworks = () => request<FrameworkDefinition[]>('/frameworks')
+export const getVendors = () => request<Array<{
+  name: string
+  category: string
+  supportLevel: string
+  mappingMode: string
+  status: string
+}>>('/vendors')
 
 export const getReports = () => getLiveReports()
 

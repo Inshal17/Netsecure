@@ -48,6 +48,20 @@ def test_frameworks_expose_source_and_review_metadata():
     assert nist["scope"]
 
 
+def test_vendor_catalog_distinguishes_available_and_planned_support():
+    catalog = TestClient(app).get("/api/vendors")
+    assert catalog.status_code == 200
+    vendors = catalog.json()
+
+    cisco = next(item for item in vendors if item["name"] == "Cisco")
+    cloud_firewall = next(item for item in vendors if item["name"] == "AWS Network Firewall")
+
+    assert cisco["status"] == "Available"
+    assert cisco["supportLevel"] == "Deterministic parser"
+    assert cloud_firewall["status"] == "Planned"
+    assert cloud_firewall["supportLevel"] == "AI-assisted mapping"
+
+
 def test_mapping_suggestion_is_explainable_and_requires_approval():
     client = TestClient(app)
     response = client.post(
