@@ -1,0 +1,4682 @@
+[
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_secure_000.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_secure_000.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_insecure_001.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_insecure_001.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_mixed_002.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_mixed_002.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_secure_003.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_secure_003.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_insecure_004.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_insecure_004.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_mixed_005.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_mixed_005.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_secure_006.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_secure_006.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_insecure_007.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_insecure_007.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_mixed_008.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_mixed_008.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_secure_009.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_secure_009.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_insecure_010.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_insecure_010.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_mixed_011.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_mixed_011.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_secure_012.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_secure_012.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_insecure_013.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_insecure_013.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_mixed_014.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_mixed_014.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_secure_015.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_secure_015.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_insecure_016.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_insecure_016.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_mixed_017.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_mixed_017.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_secure_018.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_secure_018.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_insecure_019.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_insecure_019.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_mixed_020.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_mixed_020.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_secure_021.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_secure_021.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_insecure_022.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_insecure_022.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_mixed_023.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_mixed_023.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_secure_024.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_secure_024.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_insecure_025.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_insecure_025.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_mixed_026.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_mixed_026.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_secure_027.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_secure_027.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_insecure_028.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_insecure_028.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_mixed_029.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_mixed_029.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_secure_030.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_secure_030.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_insecure_031.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_insecure_031.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_mixed_032.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_mixed_032.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_secure_033.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_secure_033.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_insecure_034.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_insecure_034.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_mixed_035.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_mixed_035.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_secure_036.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_secure_036.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_insecure_037.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_insecure_037.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_mixed_038.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_mixed_038.cfg"
+  },
+  {
+    "vendor": "Cisco",
+    "filename": "cisco_secure_039.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://developer.cisco.com/",
+    "file_path": "data/datasets/vendor_configs/cisco_secure_039.cfg"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_secure_000.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_secure_000.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_insecure_001.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_insecure_001.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_mixed_002.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_mixed_002.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_secure_003.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_secure_003.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_insecure_004.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_insecure_004.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_mixed_005.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_mixed_005.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_secure_006.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_secure_006.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_insecure_007.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_insecure_007.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_mixed_008.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_mixed_008.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_secure_009.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_secure_009.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_insecure_010.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_insecure_010.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_mixed_011.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_mixed_011.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_secure_012.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_secure_012.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_insecure_013.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_insecure_013.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_mixed_014.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_mixed_014.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_secure_015.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_secure_015.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_insecure_016.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_insecure_016.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_mixed_017.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_mixed_017.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_secure_018.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_secure_018.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_insecure_019.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_insecure_019.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_mixed_020.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_mixed_020.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_secure_021.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_secure_021.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_insecure_022.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_insecure_022.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_mixed_023.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_mixed_023.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_secure_024.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_secure_024.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_insecure_025.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_insecure_025.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_mixed_026.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_mixed_026.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_secure_027.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_secure_027.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_insecure_028.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_insecure_028.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_mixed_029.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_mixed_029.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_secure_030.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_secure_030.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_insecure_031.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_insecure_031.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_mixed_032.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_mixed_032.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_secure_033.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_secure_033.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_insecure_034.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_insecure_034.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_mixed_035.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_mixed_035.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_secure_036.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_secure_036.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_insecure_037.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_insecure_037.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_mixed_038.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_mixed_038.conf"
+  },
+  {
+    "vendor": "Juniper",
+    "filename": "juniper_secure_039.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.juniper.net/documentation/",
+    "file_path": "data/datasets/vendor_configs/juniper_secure_039.conf"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_secure_000.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_secure_000.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_insecure_001.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_insecure_001.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_mixed_002.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_mixed_002.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_secure_003.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_secure_003.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_insecure_004.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_insecure_004.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_mixed_005.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_mixed_005.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_secure_006.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_secure_006.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_insecure_007.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_insecure_007.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_mixed_008.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_mixed_008.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_secure_009.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_secure_009.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_insecure_010.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_insecure_010.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_mixed_011.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_mixed_011.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_secure_012.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_secure_012.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_insecure_013.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_insecure_013.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_mixed_014.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_mixed_014.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_secure_015.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_secure_015.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_insecure_016.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_insecure_016.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_mixed_017.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_mixed_017.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_secure_018.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_secure_018.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_insecure_019.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_insecure_019.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_mixed_020.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_mixed_020.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_secure_021.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_secure_021.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_insecure_022.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_insecure_022.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_mixed_023.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_mixed_023.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_secure_024.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_secure_024.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_insecure_025.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_insecure_025.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_mixed_026.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_mixed_026.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_secure_027.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_secure_027.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_insecure_028.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_insecure_028.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_mixed_029.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_mixed_029.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_secure_030.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_secure_030.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_insecure_031.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_insecure_031.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_mixed_032.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_mixed_032.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_secure_033.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_secure_033.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_insecure_034.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_insecure_034.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_mixed_035.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_mixed_035.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_secure_036.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_secure_036.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_insecure_037.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_insecure_037.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_mixed_038.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_mixed_038.cfg"
+  },
+  {
+    "vendor": "Fortinet",
+    "filename": "fortinet_secure_039.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.fortinet.com/",
+    "file_path": "data/datasets/vendor_configs/fortinet_secure_039.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_secure_000.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_secure_000.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_insecure_001.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_insecure_001.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_mixed_002.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_mixed_002.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_secure_003.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_secure_003.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_insecure_004.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_insecure_004.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_mixed_005.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_mixed_005.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_secure_006.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_secure_006.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_insecure_007.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_insecure_007.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_mixed_008.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_mixed_008.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_secure_009.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_secure_009.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_insecure_010.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_insecure_010.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_mixed_011.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_mixed_011.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_secure_012.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_secure_012.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_insecure_013.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_insecure_013.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_mixed_014.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_mixed_014.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_secure_015.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_secure_015.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_insecure_016.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_insecure_016.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_mixed_017.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_mixed_017.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_secure_018.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_secure_018.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_insecure_019.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_insecure_019.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_mixed_020.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_mixed_020.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_secure_021.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_secure_021.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_insecure_022.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_insecure_022.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_mixed_023.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_mixed_023.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_secure_024.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_secure_024.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_insecure_025.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_insecure_025.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_mixed_026.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_mixed_026.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_secure_027.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_secure_027.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_insecure_028.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_insecure_028.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_mixed_029.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_mixed_029.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_secure_030.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_secure_030.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_insecure_031.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_insecure_031.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_mixed_032.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_mixed_032.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_secure_033.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_secure_033.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_insecure_034.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_insecure_034.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_mixed_035.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_mixed_035.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_secure_036.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_secure_036.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_insecure_037.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_insecure_037.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_mixed_038.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_mixed_038.cfg"
+  },
+  {
+    "vendor": "Palo Alto",
+    "filename": "palo-alto_secure_039.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://docs.paloaltonetworks.com/",
+    "file_path": "data/datasets/vendor_configs/palo-alto_secure_039.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_secure_000.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_secure_000.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_insecure_001.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_insecure_001.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_mixed_002.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_mixed_002.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_secure_003.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_secure_003.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_insecure_004.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_insecure_004.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_mixed_005.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_mixed_005.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_secure_006.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_secure_006.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_insecure_007.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_insecure_007.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_mixed_008.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_mixed_008.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_secure_009.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_secure_009.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_insecure_010.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_insecure_010.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_mixed_011.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_mixed_011.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_secure_012.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_secure_012.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_insecure_013.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_insecure_013.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_mixed_014.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_mixed_014.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_secure_015.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_secure_015.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_insecure_016.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_insecure_016.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_mixed_017.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_mixed_017.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_secure_018.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_secure_018.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_insecure_019.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_insecure_019.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_mixed_020.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_mixed_020.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_secure_021.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_secure_021.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_insecure_022.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_insecure_022.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_mixed_023.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_mixed_023.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_secure_024.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_secure_024.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_insecure_025.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_insecure_025.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_mixed_026.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_mixed_026.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_secure_027.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_secure_027.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_insecure_028.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_insecure_028.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_mixed_029.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_mixed_029.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_secure_030.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_secure_030.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_insecure_031.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_insecure_031.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_mixed_032.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_mixed_032.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_secure_033.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_secure_033.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_insecure_034.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_insecure_034.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_mixed_035.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_mixed_035.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_secure_036.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_secure_036.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_insecure_037.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_insecure_037.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_mixed_038.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_mixed_038.cfg"
+  },
+  {
+    "vendor": "Arista",
+    "filename": "arista_secure_039.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arista.com/en/support/docs",
+    "file_path": "data/datasets/vendor_configs/arista_secure_039.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_secure_000.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_secure_000.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_insecure_001.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_insecure_001.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_mixed_002.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_mixed_002.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_secure_003.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_secure_003.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_insecure_004.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_insecure_004.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_mixed_005.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_mixed_005.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_secure_006.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_secure_006.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_insecure_007.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_insecure_007.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_mixed_008.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_mixed_008.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_secure_009.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_secure_009.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_insecure_010.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_insecure_010.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_mixed_011.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_mixed_011.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_secure_012.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_secure_012.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_insecure_013.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_insecure_013.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_mixed_014.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_mixed_014.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_secure_015.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_secure_015.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_insecure_016.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_insecure_016.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_mixed_017.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_mixed_017.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_secure_018.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_secure_018.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_insecure_019.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_insecure_019.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_mixed_020.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_mixed_020.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_secure_021.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_secure_021.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_insecure_022.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_insecure_022.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_mixed_023.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_mixed_023.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_secure_024.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_secure_024.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_insecure_025.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_insecure_025.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_mixed_026.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_mixed_026.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_secure_027.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_secure_027.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_insecure_028.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_insecure_028.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_mixed_029.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_mixed_029.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_secure_030.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_secure_030.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_insecure_031.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_insecure_031.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_mixed_032.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_mixed_032.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_secure_033.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_secure_033.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_insecure_034.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_insecure_034.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_mixed_035.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_mixed_035.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_secure_036.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_secure_036.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_insecure_037.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_insecure_037.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_mixed_038.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_mixed_038.cfg"
+  },
+  {
+    "vendor": "HPE Aruba",
+    "filename": "hpe-aruba_secure_039.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://www.arubanetworks.com/techdocs/",
+    "file_path": "data/datasets/vendor_configs/hpe-aruba_secure_039.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_secure_000.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_secure_000.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_insecure_001.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_insecure_001.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_mixed_002.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_mixed_002.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_secure_003.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_secure_003.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_insecure_004.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_insecure_004.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_mixed_005.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_mixed_005.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_secure_006.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_secure_006.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_insecure_007.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_insecure_007.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_mixed_008.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_mixed_008.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_secure_009.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_secure_009.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_insecure_010.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_insecure_010.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_mixed_011.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_mixed_011.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_secure_012.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_secure_012.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_insecure_013.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_insecure_013.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_mixed_014.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_mixed_014.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_secure_015.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_secure_015.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_insecure_016.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_insecure_016.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_mixed_017.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_mixed_017.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_secure_018.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_secure_018.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_insecure_019.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_insecure_019.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_mixed_020.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_mixed_020.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_secure_021.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_secure_021.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_insecure_022.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_insecure_022.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_mixed_023.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_mixed_023.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_secure_024.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_secure_024.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_insecure_025.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_insecure_025.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_mixed_026.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_mixed_026.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_secure_027.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_secure_027.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_insecure_028.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_insecure_028.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_mixed_029.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_mixed_029.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_secure_030.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_secure_030.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_insecure_031.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_insecure_031.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_mixed_032.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_mixed_032.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_secure_033.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_secure_033.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_insecure_034.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_insecure_034.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_mixed_035.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_mixed_035.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_secure_036.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_secure_036.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_insecure_037.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_insecure_037.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_mixed_038.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_mixed_038.cfg"
+  },
+  {
+    "vendor": "Huawei",
+    "filename": "huawei_secure_039.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://support.huawei.com/",
+    "file_path": "data/datasets/vendor_configs/huawei_secure_039.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_secure_000.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_secure_000.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_insecure_001.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_insecure_001.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_mixed_002.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_mixed_002.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_secure_003.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_secure_003.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_insecure_004.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_insecure_004.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_mixed_005.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_mixed_005.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_secure_006.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_secure_006.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_insecure_007.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_insecure_007.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_mixed_008.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_mixed_008.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_secure_009.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_secure_009.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_insecure_010.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_insecure_010.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_mixed_011.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_mixed_011.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_secure_012.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_secure_012.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_insecure_013.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_insecure_013.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_mixed_014.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_mixed_014.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_secure_015.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_secure_015.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_insecure_016.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_insecure_016.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_mixed_017.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_mixed_017.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_secure_018.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_secure_018.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_insecure_019.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_insecure_019.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_mixed_020.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_mixed_020.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_secure_021.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_secure_021.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_insecure_022.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_insecure_022.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_mixed_023.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_mixed_023.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_secure_024.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_secure_024.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_insecure_025.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_insecure_025.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_mixed_026.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_mixed_026.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_secure_027.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_secure_027.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_insecure_028.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_insecure_028.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_mixed_029.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_mixed_029.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_secure_030.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_secure_030.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_insecure_031.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_insecure_031.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_mixed_032.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_mixed_032.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_secure_033.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_secure_033.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_insecure_034.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_insecure_034.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_mixed_035.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_mixed_035.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_secure_036.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_secure_036.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_insecure_037.cfg",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_insecure_037.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_mixed_038.cfg",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_mixed_038.cfg"
+  },
+  {
+    "vendor": "Check Point",
+    "filename": "check-point_secure_039.cfg",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://community.checkpoint.com/",
+    "file_path": "data/datasets/vendor_configs/check-point_secure_039.cfg"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_secure_000.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_secure_000.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_insecure_001.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_insecure_001.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_mixed_002.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_mixed_002.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_secure_003.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_secure_003.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_insecure_004.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_insecure_004.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_mixed_005.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_mixed_005.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_secure_006.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_secure_006.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_insecure_007.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_insecure_007.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_mixed_008.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_mixed_008.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_secure_009.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_secure_009.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_insecure_010.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_insecure_010.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_mixed_011.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_mixed_011.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_secure_012.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_secure_012.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_insecure_013.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_insecure_013.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_mixed_014.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_mixed_014.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_secure_015.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_secure_015.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_insecure_016.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_insecure_016.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_mixed_017.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_mixed_017.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_secure_018.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_secure_018.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_insecure_019.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_insecure_019.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_mixed_020.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_mixed_020.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_secure_021.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_secure_021.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_insecure_022.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_insecure_022.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_mixed_023.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_mixed_023.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_secure_024.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_secure_024.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_insecure_025.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_insecure_025.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_mixed_026.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_mixed_026.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_secure_027.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_secure_027.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_insecure_028.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_insecure_028.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_mixed_029.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_mixed_029.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_secure_030.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_secure_030.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_insecure_031.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_insecure_031.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_mixed_032.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_mixed_032.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_secure_033.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_secure_033.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_insecure_034.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_insecure_034.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_mixed_035.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_mixed_035.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_secure_036.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_secure_036.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_insecure_037.conf",
+    "state": "insecure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_insecure_037.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_mixed_038.conf",
+    "state": "mixed",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_mixed_038.conf"
+  },
+  {
+    "vendor": "SONiC",
+    "filename": "sonic_secure_039.conf",
+    "state": "secure",
+    "frameworks": [
+      "CIS Benchmarks",
+      "NIST SP 800-53",
+      "DISA STIG",
+      "ISO/IEC 27001"
+    ],
+    "source_hint": "https://github.com/sonic-net/sonic-buildimage",
+    "file_path": "data/datasets/vendor_configs/sonic_secure_039.conf"
+  }
+]

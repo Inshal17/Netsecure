@@ -79,6 +79,26 @@ export interface Finding {
   references: string[]
 }
 
+export interface SecurityEvent {
+  id: string
+  source: 'wazuh' | 'zeek' | 'suricata'
+  timestamp: string
+  asset: string
+  eventType: string
+  severity: Severity
+  confidence: number
+  evidence: Record<string, unknown>
+  externalId?: string
+  relatedAnalysisId?: string
+  correlations: Array<{
+    analysisId?: string
+    device?: string
+    matchedControls?: string[]
+    confidence?: number
+    reason?: string
+  }>
+}
+
 export interface RemediationTask {
   id: string
   finding: string
@@ -103,6 +123,10 @@ export interface TrainingItem {
   meaning: string
   expectedSecureValue: string
   observedValue?: boolean
+  analysisId?: string
+  reviewReason?: string
+  reviewStatus?: string
+  reviewedAt?: string
 }
 
 export interface FrameworkDefinition {

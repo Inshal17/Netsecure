@@ -60,23 +60,25 @@ import {
   getLiveDashboard,
   getLiveDevices,
   getLiveFindings,
+  getSecurityEvents,
   getLiveAnalyses,
   getLiveReports,
-  getUploadedFiles,
   getRemediations,
   getTrainingItems,
   getTrainingQueue,
   suggestTrainingMapping,
+  rejectTrainingMapping,
   saveTrainingMapping,
   applyTrainingMappings,
   startAnalysis,
   getStorageInfo,
+  getGovernance,
   reRunUploadedAnalysis,
   downloadReport,
 } from './services/api'
 
 // vendorOptions removed; use live devices to derive vendor list
-import type { Device, Finding, FrameworkDefinition, ReportItem, TrainingItem } from './types'
+import type { Device, Finding, FrameworkDefinition, ReportItem, SecurityEvent, TrainingItem } from './types'
 
 type Toast = {
   id: number
@@ -1049,19 +1051,95 @@ function ConfigurationPage() {
   const { showToast } = useOutletContext<LayoutContext>()
   const [files, setFiles] = useState<File[]>([])
   const [uploadedFiles, setUploadedFiles] = useState<any[]>([])
+  const [fileDetections, setFileDetections] = useState<Record<string, string>>({})
   const [rerunTarget, setRerunTarget] = useState<any | null>(null)
   const [rerunInProgress, setRerunInProgress] = useState(false)
   const [storageInfo, setStorageInfo] = useState<{ s3_configured: boolean; s3_bucket?: string } | null>(null)
   const [framework, setFramework] = useState('CIS Benchmarks')
   const [frameworkOptions, setFrameworkOptions] = useState<string[]>(['CIS Benchmarks', 'NIST SP 800-53', 'DISA STIG', 'ISO/IEC 27001'])
-  const supportedVendors = ['Cisco', 'Juniper', 'Arista', 'Fortinet', 'SONiC', 'Palo Alto', 'HPE Aruba', 'Extreme', 'MikroTik', 'Huawei', 'Check Point', 'Sophos', 'SonicWall', 'AWS', 'Azure', 'GCP']
-  const [vendorOptionsState, setVendorOptions] = useState<string[]>(supportedVendors)
-  const [vendor, setVendor] = useState(vendorOptionsState[0] ?? 'Cisco')
+  const supportedVendors = ['Arista', 'Check Point', 'Cisco', 'Fortinet', 'HPE Aruba', 'Huawei', 'Juniper', 'Palo Alto', 'SONiC']
+  const [vendorOptionsState, setVendorOptions] = useState<string[]>(['Auto Detect', ...supportedVendors])
+  const [vendor, setVendor] = useState('Auto Detect')
+  const [detectedVendor, setDetectedVendor] = useState<string | null>(null)
   const [analysisDepth, setAnalysisDepth] = useState('Standard')
 
-  const handleFileUpload = (incomingFiles: FileList | File[]) => {
+  const detectVendorFromConfig = (config: string): string => {
+    const lower = config.toLowerCase()
+
+    if (lower.includes('config system global') || lower.includes('fortigate')) return 'Fortinet'
+    if (lower.includes('set deviceconfig system') || lower.includes('deviceconfig system') || lower.includes('set network virtual-router') || lower.includes('set zone')) return 'Palo Alto'
+    if (lower.includes('no telnet-server') || lower.includes('aaa authentication-server') || (lower.includes('ip ssh version') && lower.includes('hostname sw-')) || (lower.includes('ip http server') && lower.includes('hostname'))) return 'HPE Aruba'
+    if (lower.includes('sysname') || lower.includes('undo telnet server enable') || lower.includes('undo http server enable') || lower.includes('ntp-service enable')) return 'Huawei'
+    if (lower.includes('set hostname') || lower.includes('set admin telnet') || lower.includes('set ssh version') || lower.includes('cp-')) return 'Check Point'
+    if (lower.includes('junos:') || lower.includes('protocol-version v') || lower.includes('tries-before-disconnect') || lower.includes('set system')) return 'Juniper'
+    if (lower.includes('sonic')) return 'SONiC'
+    if (lower.includes('arista') || lower.includes('management ssh') || lower.includes('management api http-commands')) return 'Arista'
+    if (lower.includes('hostname ') || lower.includes('line vty') || lower.includes('ip ssh version')) return 'Cisco'
+
+    return 'Unknown'
+  }
+
+  const handleFileUpload = async (incomingFiles: FileList | File[]) => {
     const nextFiles = Array.from(incomingFiles)
     setFiles(nextFiles)
+
+    const detectionMap: Record<string, string> = {}
+    try {
+      const detectedEntries = await Promise.all(
+        nextFiles.map(async (file, index) => {
+          const fileKey = `${file.name}-${file.lastModified}-${file.size}-${index}`
+          try {
+            const content = await file.text()
+            const detected = detectVendorFromConfig(content)
+            detectionMap[fileKey] = detected === 'Unknown' ? 'Unknown' : detected
+            return {
+              id: fileKey,
+              filename: file.name,
+              size: 'n/a',
+              detectedVendor: detectionMap[fileKey],
+              deviceType: 'Network device',
+              status: 'Ready',
+              uploadUrl: '#',
+            }
+          } catch {
+            detectionMap[fileKey] = 'Unknown'
+            return {
+              id: fileKey,
+              filename: file.name,
+              size: 'n/a',
+              detectedVendor: 'Unknown',
+              deviceType: 'Network device',
+              status: 'Ready',
+              uploadUrl: '#',
+            }
+          }
+        }),
+      )
+      setFileDetections(detectionMap)
+      setUploadedFiles(detectedEntries)
+      const detectedVendors = Array.from(new Set(
+        detectedEntries
+          .map((entry) => entry.detectedVendor)
+          .filter((value): value is string => value !== 'Unknown' && Boolean(value)),
+      ))
+      setDetectedVendor(detectedVendors.length ? detectedVendors.join(', ') : null)
+      if (vendor === 'Auto Detect' && nextFiles.length === 1 && detectedVendors.length === 1) {
+        setVendor(detectedVendors[0])
+      }
+    } catch {
+      setFileDetections({})
+      setUploadedFiles(nextFiles.map((file, index) => ({
+        id: `${file.name}-${file.lastModified}-${file.size}-${index}`,
+        filename: file.name,
+        size: 'n/a',
+        detectedVendor: 'Unknown',
+        deviceType: 'Network device',
+        status: 'Ready',
+        uploadUrl: '#',
+      })))
+      setDetectedVendor(null)
+    }
+
     showToast(`${nextFiles.length} file(s) loaded for analysis`, 'info')
   }
 
@@ -1071,27 +1149,33 @@ function ConfigurationPage() {
       return
     }
 
-    const file = files[0]
     try {
-      const { job, result } = await startAnalysis(file, vendor, framework)
-      showToast(`Analysis complete for ${file.name}`, 'success')
-      navigate(`/analysis/${job.id || result.id}`)
+      const results = await Promise.all(
+        files.map((file, index) => {
+          const fileKey = `${file.name}-${file.lastModified}-${file.size}-${index}`
+          const detectedVendor = fileDetections[fileKey]
+          const requestVendor = vendor === 'Auto Detect'
+            ? (detectedVendor && detectedVendor !== 'Unknown' ? detectedVendor : 'Auto')
+            : vendor
+          return startAnalysis(file, requestVendor, framework)
+        }),
+      )
+      if (results.length) {
+        showToast(`Started analysis for ${files.length} file(s)`, 'success')
+        navigate('/analysis')
+      }
+      setFiles([])
+      setUploadedFiles([])
+      setFileDetections({})
+      setDetectedVendor(null)
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Analysis could not be completed.', 'warning')
     }
   }
 
   useEffect(() => {
+    setVendorOptions(['Auto Detect', ...supportedVendors])
     getFrameworks().then((items) => setFrameworkOptions(items.map((f: any) => f.name))).catch(() => {})
-    // derive vendor options from persisted devices
-    getLiveDevices().then((items) => {
-      const vendors = Array.from(new Set((items || []).map((d: any) => d.vendor).filter(Boolean)))
-      if (vendors.length) {
-        setVendorOptions((prev) => Array.from(new Set([...prev, ...vendors])))
-      }
-    }).catch(() => {})
-    // load previously uploaded files and storage info
-    getUploadedFiles().then((items) => setUploadedFiles(items)).catch(() => {})
     getStorageInfo().then((info) => setStorageInfo(info)).catch(() => setStorageInfo({ s3_configured: false }))
   }, [])
 
@@ -1135,11 +1219,16 @@ function ConfigurationPage() {
           </label>
         </div>
 
-        <div className="upload-actions">
+        <div className="upload-actions" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <button type="button" className="primary-button" onClick={handleStartAnalysis}>
             <Activity size={16} />
             Start Analysis
           </button>
+          {detectedVendor ? (
+            <div style={{ fontSize: 13, color: '#2f3b2f', background: '#edf5ee', border: '1px solid #cfe4d2', borderRadius: 999, padding: '6px 10px', fontWeight: 600 }}>
+              Detected as: {detectedVendor}
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -1221,7 +1310,11 @@ function AnalysisPage() {
   useEffect(() => {
     setLoading(true)
     getAnalysisJobs()
-      .then((items) => setJobs(items ?? []))
+      .then((items) => setJobs((items ?? []).slice().sort((a: any, b: any) => {
+        const aTime = new Date(a.started ?? a.completed ?? a.createdAt ?? 0).getTime()
+        const bTime = new Date(b.started ?? b.completed ?? b.createdAt ?? 0).getTime()
+        return bTime - aTime
+      })))
       .catch(() => setJobs([]))
       .finally(() => setLoading(false))
   }, [])
@@ -1338,6 +1431,7 @@ function AnalysisDetailsPage() {
                 <th>Severity</th>
                 <th>Evidence</th>
                 <th>Remediation</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -1363,13 +1457,18 @@ function AnalysisDetailsPage() {
 
 function FindingsPage() {
   const [findings, setFindings] = useState<Finding[]>([])
+  const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([])
   const [loadError, setLoadError] = useState('')
   const { searchTerm } = useOutletContext<LayoutContext>()
   const [severityFilter, setSeverityFilter] = useState('All')
   const [statusFilter, setStatusFilter] = useState('All')
   const navigate = useNavigate()
 
-  useEffect(() => { getLiveFindings().then(setFindings).catch((error) => setLoadError(error.message)) }, [])
+  useEffect(() => {
+    Promise.all([getLiveFindings(), getSecurityEvents()])
+      .then(([liveFindings, events]) => { setFindings(liveFindings); setSecurityEvents(events) })
+      .catch((error) => setLoadError(error.message))
+  }, [])
 
   const filtered = findings.filter((finding) => {
     const matchesSearch = `${finding.title} ${finding.device} ${finding.vendor}`.toLowerCase().includes(searchTerm.toLowerCase())
@@ -1438,6 +1537,29 @@ function FindingsPage() {
                   <td>{finding.action}</td>
                 </tr>
               )) : <tr><td colSpan={7} className="empty-cell">No active findings from saved scans.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="panel">
+        <SectionHeader title="Correlated Security Telemetry" />
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Source</th><th>Asset</th><th>Event</th><th>Severity</th><th>Correlations</th><th>Detected</th></tr>
+            </thead>
+            <tbody>
+              {securityEvents.length ? securityEvents.map((event) => (
+                <tr key={event.id}>
+                  <td>{event.source}</td>
+                  <td>{event.asset}</td>
+                  <td>{event.eventType}</td>
+                  <td><SeverityPill severity={event.severity} /></td>
+                  <td>{event.correlations.length ? event.correlations.flatMap((item) => item.matchedControls ?? []).join(', ') || 'Asset matched' : 'Unmatched'}</td>
+                  <td>{new Date(event.timestamp).toLocaleString()}</td>
+                </tr>
+              )) : <tr><td colSpan={6} className="empty-cell">No Wazuh, Zeek, or Suricata events have been ingested.</td></tr>}
             </tbody>
           </table>
         </div>
@@ -1569,7 +1691,7 @@ function TrainingPage() {
   const [items, setItems] = useState<TrainingItem[]>([])
   const [queue, setQueue] = useState<Array<{ analysisId: string; fileName: string; vendor: string; rawCommand: string; suggestedField: string | null; suggestionConfidence: number; status: string }>>([])
   const [suggestion, setSuggestion] = useState<string | null>(null)
-  const [grounding, setGrounding] = useState<{ requirement: string; retrievalMethod: string; references: Array<{ framework: string; reference: string; sourceUrl: string }> } | null>(null)
+  const [grounding, setGrounding] = useState<{ requirement: string; retrievalMethod: string; references: Array<{ framework: string; reference: string; sourceUrl: string }>; retrievedDocuments: Array<{ title: string; source: string; version: string; score: number }> } | null>(null)
   const { showToast } = useOutletContext<LayoutContext>()
 
   useEffect(() => { getTrainingItems().then((res) => setItems(res as TrainingItem[])).catch(() => {}) }, [])
@@ -1585,6 +1707,7 @@ function TrainingPage() {
     expectedSecureValue: 'disabled',
     observedValue: 'false',
     confidence: '91',
+    analysisId: '',
   })
 
   const handleSave = async () => {
@@ -1601,6 +1724,7 @@ function TrainingPage() {
         meaning: form.meaning,
         expectedSecureValue: form.expectedSecureValue,
         observedValue: form.observedValue === 'true',
+        analysisId: form.analysisId,
       })
       setItems((current) => [created, ...current])
       showToast('Mapping saved to the persistent training model', 'success')
@@ -1637,8 +1761,26 @@ function TrainingPage() {
   }
 
   const selectQueueItem = (item: typeof queue[number]) => {
-    setForm((current) => ({ ...current, command: item.rawCommand, vendor: item.vendor, parameter: item.suggestedField ?? current.parameter, confidence: String(item.suggestionConfidence || current.confidence) }))
+    setForm((current) => ({ ...current, command: item.rawCommand, vendor: item.vendor, analysisId: item.analysisId, parameter: item.suggestedField ?? current.parameter, confidence: String(item.suggestionConfidence || current.confidence) }))
     setSuggestion(item.suggestedField ? `Suggested from ${item.fileName}: review before approval.` : `Review required from ${item.fileName}.`)
+  }
+
+  const handleReject = async () => {
+    try {
+      await rejectTrainingMapping({
+        command: form.command,
+        vendor: form.vendor,
+        mapping: form.parameter,
+        observedValue: form.observedValue === 'true',
+        confidence: Number(form.confidence),
+        analysisId: form.analysisId,
+        reviewReason: 'Rejected by administrator during training review',
+      })
+      setQueue((current) => current.filter((item) => !(item.vendor === form.vendor && item.rawCommand === form.command)))
+      showToast('Mapping rejection recorded in the audit trail', 'success')
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Mapping rejection could not be recorded.', 'warning')
+    }
   }
 
   return (
@@ -1671,6 +1813,7 @@ function TrainingPage() {
           <button type="button" className="secondary-button" onClick={handleSuggest}>Suggest Mapping</button>
           {suggestion ? <small>{suggestion}</small> : null}
           {grounding ? <small>Grounding: {grounding.requirement} ({grounding.references.map((reference) => `${reference.framework} ${reference.reference}`).join(', ')})</small> : null}
+          {grounding ? <small>Retrieved: {grounding.retrievedDocuments.map((document) => `${document.title} (${document.score})`).join(', ')}</small> : null}
         </div>
 
         <div className="training-form-grid">
@@ -1722,7 +1865,7 @@ function TrainingPage() {
 
         <div className="training-buttons">
           <button type="button" className="primary-button" onClick={handleSave}>Save Mapping</button>
-          <button type="button" className="secondary-button" onClick={() => { setQueue((current) => current.filter((item) => !(item.vendor === form.vendor && item.rawCommand === form.command))); showToast('Training entry rejected for this review session', 'warning') }}>Reject</button>
+          <button type="button" className="secondary-button" onClick={handleReject}>Reject</button>
           <button type="button" className="ghost-button" onClick={() => showToast('Entry flagged for review', 'info')}>Mark for Review</button>
         </div>
       </div>
@@ -1738,7 +1881,8 @@ function TrainingPage() {
                 <th>Mapping</th>
                 <th>Framework</th>
                 <th>Confidence</th>
-                <th>Created by</th>
+                <th>Decision</th>
+                <th>Reviewer</th>
                 <th>Date</th>
               </tr>
             </thead>
@@ -1750,6 +1894,7 @@ function TrainingPage() {
                   <td>{item.mapping}</td>
                   <td>{item.framework}</td>
                   <td>{item.confidence}%</td>
+                  <td><StatusBadge status={item.reviewStatus ?? 'Approved'} /></td>
                   <td>{item.createdBy}</td>
                   <td>{item.date}</td>
                 </tr>
@@ -2026,9 +2171,52 @@ function AuditLogsPage() {
 }
 
 function SettingsPage() {
+  const [settings, setSettings] = useState<any>(null)
+
+  useEffect(() => {
+    getGovernance()
+      .then((data) => setSettings(data))
+      .catch(() => setSettings(null))
+  }, [])
+
+  const formatBytes = (bytes: number) => {
+    if (!Number.isFinite(bytes) || bytes <= 0) return '0 B'
+    const units = ['B', 'KB', 'MB', 'GB']
+    let value = bytes
+    let index = 0
+    while (value >= 1024 && index < units.length - 1) {
+      value /= 1024
+      index += 1
+    }
+    return `${value.toFixed(value >= 10 || index === 0 ? 0 : 1)} ${units[index]}`
+  }
+
+  const rows = [
+    ['Authentication', settings ? (settings.authEnabled ? 'Enabled' : 'Disabled') : 'Loading...'],
+    ['Rate limit', settings ? `${settings.rateLimitPerWindow} requests / ${settings.rateLimitWindowSeconds}s` : 'Loading...'],
+    ['Retention', settings ? `${settings.retentionDays} days` : 'Loading...'],
+    ['Upload size limit', settings ? formatBytes(settings.maxUploadBytes) : 'Loading...'],
+    ['Redaction', settings ? (settings.redactionEnabled ? 'Enabled' : 'Disabled') : 'Loading...'],
+    ['Backup', settings ? (settings.backupAvailable ? 'Available' : 'Unavailable') : 'Loading...'],
+    ['Retention automation', settings ? (settings.retentionScriptAvailable ? 'Configured' : 'Not configured') : 'Loading...'],
+    ['Local database', settings ? settings.localDatabasePath : 'Loading...'],
+  ]
+
   return (
     <div className="page-stack">
       <div className="settings-layout">
+        <div className="panel settings-column">
+          <h3>Governance</h3>
+          <div className="data-list">
+            {rows.map(([label, value]) => (
+              <div className="data-row" key={label}>
+                <div><strong>{label}</strong></div>
+                <div>{value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="panel settings-column">
           <h3>General</h3>
           <label className="setting-row"><span>Default compliance framework</span><input type="checkbox" defaultChecked /></label>

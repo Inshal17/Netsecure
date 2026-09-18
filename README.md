@@ -57,6 +57,16 @@ The project includes control mappings for:
 
 The framework metadata is exposed through the backend API and surfaced in the frontend as visible control families and source references.
 
+## Local dataset and AI support workflow
+
+The project also ships with a reusable training-data workflow for AI-assisted interpretation and benchmark preparation:
+
+- `backend/scripts/build_combined_dataset.py` merges local vendor config samples with optional external CSV examples into a single JSONL dataset
+- the generated output is stored under `data/datasets/combined_training_dataset.jsonl`
+- this dataset is intended for local LLM benchmarking, explanation generation, and model evaluation support rather than as the sole source of compliance truth
+
+This keeps the rule-based compliance engine authoritative while still producing a useful AI training corpus.
+
 ## Security baseline model
 
 The normalization layer maps device commands into a common security model with fields such as:
@@ -86,6 +96,11 @@ These control fields are evaluated with evidence and mapped to compliance framew
 - health, dashboard, findings, reports, and frameworks APIs
 - vendor support matrix and explainable mapping suggestion APIs
 - unknown-command training queue sourced from saved analyses
+- vendor-aware platform version detection with applicability warnings
+- deterministic quality benchmark API for vendor, control, evidence, and version metrics
+- normalized Wazuh, Suricata, and Zeek security-event ingestion APIs
+- persisted telemetry events with explainable asset/control correlation
+- unified telemetry-backed findings with transparent correlation confidence scores
 - PDF report generation
 - authentication and authorization support
 - rate limiting and request identity tracking
@@ -111,6 +126,7 @@ The project includes:
 - heuristic suggestions for unknown vendor commands
 - explainable mapping suggestions that require reviewer approval
 - grounded mapping context with framework references and source URLs
+- offline RAG retrieval over curated framework and vendor-security knowledge
 - approval-triggered re-analysis for previously saved configurations
 - stored training mappings that can be reused across re-analysis
 - per-control mapping provenance and confidence values
@@ -137,6 +153,8 @@ Netsecure/
 ├── index.html
 └── test-config.cfg
 ```
+
+Note: the active Vite app root is `frontend/`; the root-level `src/`, `public/`, and `index.html` files are legacy leftovers and are not used by the active build. This is intentional for the current project layout but should be cleaned up in a future repository refactor.
 
 ## Local setup
 
@@ -184,20 +202,55 @@ Key configuration values used by the app include:
 - SUPABASE_URL
 - SUPABASE_SECRET_KEY
 - SUPABASE_BUCKET
+- NETSECURE_LLM_PROVIDER (defaults to `offline`; supports `gemini` and `openai-compatible`)
+- NETSECURE_LLM_ENDPOINT (optional provider endpoint)
+- NETSECURE_LLM_API_KEY (optional; never exposed to the frontend)
+- NETSECURE_LLM_MODEL (optional model label for audit metadata)
+
+The mapping assistant is offline-safe by default. Remote LLM use is opt-in, accepts only validated structured JSON, and falls back to the local heuristic provider when credentials are absent or the response is unavailable or invalid. Configuration commands and retrieved knowledge are sent to a remote endpoint only when `NETSECURE_LLM_PROVIDER` is explicitly set to `gemini`, `remote`, or `openai-compatible`.
 
 ## Verification status
 
-The project was validated with real checks:
+The project was validated with fresh checks on the current working tree:
 
-- Backend test suite passed with:
+- Backend tests passed with:
   `PYTHONPATH=. pytest -q backend/tests`
-  Result: 32 passed
+  Result: 52 passed
 
 - Frontend production build passed with:
   `npm run build -- --emptyOutDir`
-  Result: successful Vite build completed
+  Result: successful Vite production build completed
 
-This confirms the current prototype is functionally working and stable enough for demo and local validation.
+- Frontend lint check completed with warnings only, no blocking errors:
+  `npm run lint`
+
+This confirms the current prototype is functionally working and stable enough for demo, validation, and local deployment testing.
+
+## Prototype readiness controls
+
+The current implementation is intentionally designed as a validated prototype with explicit production boundaries. It is not presented as a full enterprise deployment but as a working compliance auditor that includes:
+
+- local-first production storage defaults with optional remote storage integration
+- blockchain-backed evidence attestation as an integrity extension rather than a full ledger deployment
+- offline-safe mapping logic with remote LLM fallback only when configured
+- a curated multi-vendor dataset that is sufficient for benchmarking and demo work without claiming enterprise-scale corpus maturity
+
+These controls are surfaced through the API in `/api/architecture/status`, `/api/dataset/summary`, and `/api/ai/status` to make the solution’s maturity posture transparent.
+
+## Team B completion status
+
+The Team B scope is complete for the prototype phase and covers the key governance, compliance, telemetry, and operational hardening workstreams:
+
+- secure default configuration and governance exposure
+- retention cleanup and local backup workflows
+- admin-only governance actions and audit logging
+- telemetry/event normalization and correlation
+- training queue, explainable mapping suggestions, and mapping provenance
+- benchmark and quality checks for readiness validation
+- frontend settings and governance visibility
+- local SQLite fallback behavior for audit/security operations
+
+At this point, the remaining work is primarily production-hardening and scale-up rather than missing core functionality.
 
 ## Blockchain extension plan
 
@@ -239,4 +292,6 @@ Use sanitized configuration exports only. The ingestion path includes some redac
 
 ## Summary
 
-NetSecureAI is an operational proof-of-concept for AI-assisted network compliance auditing. It demonstrates the full cycle from configuration upload through parsing, normalization, framework evaluation, findings, remediation, and export. It is already suitable as a prototype and can be advanced further into an NTRO-grade compliance and evidence-integrity platform with the planned blockchain and governance enhancements.
+NetSecureAI is an operational proof-of-concept for AI-assisted network compliance auditing. It demonstrates the full cycle from configuration upload through parsing, normalization, framework evaluation, findings, remediation, and export. The current repository includes a rule-driven engine, vendor-aware detection and parsing, explainable AI-assisted mapping, security telemetry correlation, dataset generation, and a blockchain-integrity extension.
+
+The project is suitable as a prototype and aligns with the original NTRO-style objective while staying honest about its current maturity: the deterministic engine is the production-grade core, and the AI and blockchain components are best understood as prototype support layers that add explainability and evidence integrity rather than replacing the compliance logic itself.

@@ -7,6 +7,7 @@ import type {
   FrameworkDefinition,
   ReportItem,
   TrainingItem,
+  SecurityEvent,
   UploadRecord,
 } from '../types'
 import { getSessionToken } from '../auth'
@@ -37,6 +38,16 @@ export const getLiveDashboard = () => request<{
 }>('/dashboard')
 export const getLiveDevices = () => request<Device[]>('/devices')
 export const getLiveFindings = () => request<Finding[]>('/findings')
+export const getSecurityEvents = (source?: SecurityEvent['source']) => request<SecurityEvent[]>(`/security-events${source ? `?source=${source}` : ''}`)
+export const ingestSecurityEvent = async (source: SecurityEvent['source'], payload: Record<string, unknown>, relatedAnalysisId?: string): Promise<SecurityEvent> => {
+  const response = await fetch(`${API_URL}/security-events/${source}`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ payload, related_analysis_id: relatedAnalysisId }),
+  })
+  if (!response.ok) throw new Error('The security event could not be ingested.')
+  return response.json() as Promise<SecurityEvent>
+}
 export const getLiveReports = () => request<ReportItem[]>('/reports')
 export const getLiveAnalyses = () => request<any[]>('/analyses')
 export const getLiveTrainingMappings = () => request<any[]>('/training-mappings')
@@ -156,7 +167,19 @@ export const startAnalysis = async (file: File, vendor: string, framework: strin
 }
 
 
-export const getAnalysisJobs = () => getLiveAnalyses()
+export const getAnalysisJobs = async () => {
+  if (runtimeJobs.length) {
+    return runtimeJobs
+      .slice()
+      .sort((a, b) => new Date(b.started ?? b.completed ?? 0).getTime() - new Date(a.started ?? a.completed ?? 0).getTime())
+  }
+
+  const analyses = await getLiveAnalyses()
+  return (analyses || [])
+    .slice()
+    .sort((a: any, b: any) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime())
+    .slice(0, 15)
+}
 
 export const getAnalysisResult = (id: string) => request<any>(`/analyses/${id}`)
 
@@ -208,6 +231,10 @@ export const suggestTrainingMapping = async (payload: { command: string; vendor:
     meaning: string
     confidence: number
     confidence_source: string
+    provider: string
+    model: string
+    promptVersion: string
+    llmUsed: boolean
     reason: string
     status: string
     knowledge: {
@@ -215,6 +242,7 @@ export const suggestTrainingMapping = async (payload: { command: string; vendor:
       requirement: string
       retrievalMethod: string
       references: Array<{ framework: string; reference: string; sourceUrl: string }>
+      retrievedDocuments: Array<{ documentId: string; title: string; source: string; sourceUrl: string; version: string; score: number }>
     }
   }
 }
@@ -230,6 +258,8 @@ export const saveTrainingMapping = async (payload: Partial<TrainingItem>): Promi
       observed_value: payload.observedValue ?? false,
       meaning: payload.meaning ?? 'Administrator-provided vendor syntax mapping.',
       confidence: payload.confidence ?? 92,
+      analysis_id: payload.analysisId,
+      review_reason: payload.reviewReason,
     }),
   })
   if (!response.ok) {
@@ -254,6 +284,25 @@ export const saveTrainingMapping = async (payload: Partial<TrainingItem>): Promi
   }
 }
 
+export const rejectTrainingMapping = async (payload: Partial<TrainingItem>) => {
+  const response = await fetch(`${API_URL}/training-mappings/reject`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      raw_command: payload.command,
+      vendor: payload.vendor ?? 'Unknown',
+      field_name: payload.mapping ?? 'telnet_disabled',
+      observed_value: payload.observedValue ?? false,
+      meaning: payload.meaning ?? 'Reviewer rejected this mapping suggestion.',
+      confidence: payload.confidence ?? 0,
+      analysis_id: payload.analysisId,
+      review_reason: payload.reviewReason ?? 'Rejected by reviewer',
+    }),
+  })
+  if (!response.ok) throw new Error('The mapping rejection could not be recorded.')
+  return response.json()
+}
+
 export const applyTrainingMappings = async () => {
   const response = await fetch(`${API_URL}/training-mappings/apply`, { method: 'POST', headers: authHeaders() })
   if (!response.ok) throw new Error('Could not apply training mappings')
@@ -268,6 +317,17 @@ export const getVendors = () => request<Array<{
   mappingMode: string
   status: string
 }>>('/vendors')
+export const getGovernance = () => request<{
+  authEnabled: boolean
+  rateLimitPerWindow: number
+  rateLimitWindowSeconds: number
+  retentionDays: number
+  maxUploadBytes: number
+  redactionEnabled: boolean
+  backupAvailable: boolean
+  retentionScriptAvailable: boolean
+  localDatabasePath: string
+}>('/governance')
 
 export const getReports = () => getLiveReports()
 
@@ -282,7 +342,27 @@ export const getAuditLogs = async () => {
 export const getUploadedFiles = async () => {
   try {
     const analyses = await getLiveAnalyses()
-    return (analyses || []).map((a: any) => ({ id: a.id, filename: a.fileName ?? a.filename ?? a.id, size: 'n/a', detectedVendor: a.vendor ?? 'Unknown', deviceType: 'Network device', status: 'Ready', uploadUrl: a.upload_url ?? `/api/analyses/${a.id}/raw` }))
+    const latestByFilename = new Map<string, any>()
+
+    for (const analysis of analyses || []) {
+      const filename = analysis.fileName ?? analysis.filename ?? analysis.id
+      const current = latestByFilename.get(filename)
+      if (!current || new Date(analysis.createdAt ?? 0).getTime() > new Date(current.createdAt ?? 0).getTime()) {
+        latestByFilename.set(filename, analysis)
+      }
+    }
+
+    return Array.from(latestByFilename.values())
+      .sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime())
+      .map((a: any) => ({
+        id: a.id,
+        filename: a.fileName ?? a.filename ?? a.id,
+        size: 'n/a',
+        detectedVendor: a.vendor ?? 'Unknown',
+        deviceType: 'Network device',
+        status: 'Ready',
+        uploadUrl: a.upload_url ?? `/api/analyses/${a.id}/raw`,
+      }))
   } catch (e) {
     return []
   }

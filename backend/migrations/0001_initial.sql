@@ -10,6 +10,11 @@ CREATE TABLE IF NOT EXISTS mappings (
   observed_value TEXT NOT NULL,
   meaning TEXT NOT NULL,
   confidence REAL NOT NULL,
+  analysis_id TEXT,
+  review_status TEXT NOT NULL DEFAULT 'Approved',
+  reviewed_by TEXT,
+  reviewed_at TEXT,
+  review_reason TEXT,
   created_at TEXT NOT NULL
 );
 
@@ -32,4 +37,18 @@ CREATE TABLE IF NOT EXISTS audit_events (
   device TEXT NOT NULL,
   result TEXT NOT NULL,
   ip_address TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS security_events (
+  id TEXT PRIMARY KEY,
+  source TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  asset TEXT NOT NULL,
+  event_type TEXT NOT NULL,
+  severity TEXT NOT NULL,
+  confidence REAL NOT NULL,
+  evidence_json TEXT NOT NULL,
+  external_id TEXT,
+  related_analysis_id TEXT,
+  correlations_json TEXT NOT NULL DEFAULT '[]'
 );

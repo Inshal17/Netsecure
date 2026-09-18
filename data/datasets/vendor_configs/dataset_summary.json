@@ -1,0 +1,74 @@
+{
+  "Cisco": {
+    "total": 40,
+    "states": {
+      "secure": 14,
+      "insecure": 13,
+      "mixed": 13
+    }
+  },
+  "Juniper": {
+    "total": 40,
+    "states": {
+      "secure": 14,
+      "insecure": 13,
+      "mixed": 13
+    }
+  },
+  "Fortinet": {
+    "total": 40,
+    "states": {
+      "secure": 14,
+      "insecure": 13,
+      "mixed": 13
+    }
+  },
+  "Palo Alto": {
+    "total": 40,
+    "states": {
+      "secure": 14,
+      "insecure": 13,
+      "mixed": 13
+    }
+  },
+  "Arista": {
+    "total": 40,
+    "states": {
+      "secure": 14,
+      "insecure": 13,
+      "mixed": 13
+    }
+  },
+  "HPE Aruba": {
+    "total": 40,
+    "states": {
+      "secure": 14,
+      "insecure": 13,
+      "mixed": 13
+    }
+  },
+  "Huawei": {
+    "total": 40,
+    "states": {
+      "secure": 14,
+      "insecure": 13,
+      "mixed": 13
+    }
+  },
+  "Check Point": {
+    "total": 40,
+    "states": {
+      "secure": 14,
+      "insecure": 13,
+      "mixed": 13
+    }
+  },
+  "SONiC": {
+    "total": 40,
+    "states": {
+      "secure": 14,
+      "insecure": 13,
+      "mixed": 13
+    }
+  }
+}

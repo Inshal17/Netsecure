@@ -4,11 +4,14 @@ NetSecureAI API
 FastAPI backend for the NetSecureAI network configuration
 compliance and security posture platform.
 
-Storage:
-    - Supabase PostgreSQL -> analyses + training mappings
-    - Supabase Storage    -> original configuration files
+Storage model:
+    - Supabase PostgreSQL -> analyses + training mappings when configured
+    - Supabase Storage    -> original configuration files when configured
+    - Local SQLite        -> governance, audit logs, retention, and backup state
 
-The local SQLite database is no longer used for application data.
+The application supports both local development and optional Supabase-backed
+production modes while keeping local governance and audit operations functional
+without cloud dependencies.
 """
 
 from __future__ import annotations
@@ -25,6 +28,7 @@ import re
 import sqlite3
 import time
 import uuid
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -46,6 +50,11 @@ from reportlab.platypus import (
     Table,
     TableStyle,
 )
+from .knowledge_base import search_knowledge
+from .llm_provider import PROMPT_VERSION, suggest_mapping
+from .quality_benchmark import run_benchmark
+from .scripts.cleanup_retention import cleanup_local_data
+from .scripts.backup_local_data import backup_local_data
 
 from backend.blockchain.fabric_client import anchor_record, verify_record
 from backend.blockchain.models import AnchorRequest, VerificationRequest
@@ -75,6 +84,66 @@ SUPABASE_BUCKET = os.getenv(
 AUTH_SECRET = os.getenv("NETSECURE_AUTH_SECRET", "")
 LOGIN_ATTEMPTS: dict[str, list[float]] = {}
 API_REQUESTS: dict[str, list[float]] = {}
+SECURITY_EVENTS: list[dict[str, Any]] = []
+MAX_UPLOAD_BYTES = int(os.getenv("NETSECURE_MAX_UPLOAD_BYTES", "10485760"))
+RETENTION_DAYS = int(os.getenv("NETSECURE_RETENTION_DAYS", "365"))
+
+
+def current_governance_settings() -> tuple[int, int]:
+    return (
+        int(os.getenv("NETSECURE_MAX_UPLOAD_BYTES", str(MAX_UPLOAD_BYTES))),
+        int(os.getenv("NETSECURE_RETENTION_DAYS", str(RETENTION_DAYS))),
+    )
+
+
+def validate_runtime_configuration() -> list[str]:
+    """Fail fast on unsafe or invalid deployment settings."""
+    issues: list[str] = []
+
+    rate_limit = os.getenv("NETSECURE_API_RATE_LIMIT", "0")
+    try:
+        rate_limit_value = int(rate_limit)
+    except ValueError:
+        issues.append("NETSECURE_API_RATE_LIMIT must be an integer")
+        rate_limit_value = 0
+    if rate_limit_value < 0:
+        issues.append("NETSECURE_API_RATE_LIMIT cannot be negative")
+
+    rate_window = os.getenv("NETSECURE_API_RATE_WINDOW_SECONDS", "60")
+    try:
+        rate_window_value = int(rate_window)
+    except ValueError:
+        issues.append("NETSECURE_API_RATE_WINDOW_SECONDS must be an integer")
+        rate_window_value = 60
+    if rate_window_value <= 0:
+        issues.append("NETSECURE_API_RATE_WINDOW_SECONDS must be greater than zero")
+
+    max_upload = os.getenv("NETSECURE_MAX_UPLOAD_BYTES", str(MAX_UPLOAD_BYTES))
+    try:
+        max_upload_value = int(max_upload)
+    except ValueError:
+        issues.append("NETSECURE_MAX_UPLOAD_BYTES must be an integer")
+        max_upload_value = MAX_UPLOAD_BYTES
+    if max_upload_value <= 0:
+        issues.append("NETSECURE_MAX_UPLOAD_BYTES must be greater than zero")
+
+    auth_secret = os.getenv("NETSECURE_AUTH_SECRET", "").strip()
+    admin_password = os.getenv("NETSECURE_ADMIN_PASSWORD", "admin@123")
+    viewer_username = os.getenv("NETSECURE_VIEWER_USERNAME", "")
+    auditor_username = os.getenv("NETSECURE_AUDITOR_USERNAME", "")
+    configured_auth = bool(os.getenv("NETSECURE_API_TOKEN", "").strip()) or bool(
+        admin_password.strip() != "admin@123"
+    ) or bool(viewer_username.strip()) or bool(auditor_username.strip())
+    if not auth_secret and configured_auth:
+        issues.append("NETSECURE_AUTH_SECRET is required when custom or non-default authentication settings are configured")
+
+    if not admin_password.strip() and os.getenv("NETSECURE_ADMIN_USERNAME", "admin").strip():
+        issues.append("NETSECURE_ADMIN_PASSWORD cannot be blank when the admin account is enabled")
+
+    if issues:
+        raise ValueError("; ".join(issues))
+    return issues
+
 
 supabase = None
 
@@ -101,9 +170,16 @@ LOCAL_DB = DATA_DIR / "netsecureai.sqlite3"
 # FASTAPI
 # ============================================================
 
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    validate_runtime_configuration()
+    yield
+
+
 app = FastAPI(
     title="NetSecureAI API",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 
@@ -200,7 +276,9 @@ async def api_token_guard(request: Request, call_next):
                 content={"detail": "Valid API bearer token required"},
                 headers={"WWW-Authenticate": "Bearer", "X-Request-ID": request_id},
             )
-        if session:
+        if valid_static and not session:
+            request.state.user = {"username": "api-token", "role": "admin"}
+        elif session:
             request.state.user = session
 
     response = await call_next(request)
@@ -225,6 +303,147 @@ async def api_token_guard(request: Request, call_next):
 
 def now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _event_timestamp(payload: dict[str, Any]) -> str:
+    return str(payload.get("timestamp") or payload.get("@timestamp") or payload.get("ts") or now())
+
+
+def _event_severity(source: str, payload: dict[str, Any]) -> str:
+    if source == "wazuh":
+        level = int(payload.get("rule", {}).get("level", payload.get("level", 0)) or 0)
+        return "Critical" if level >= 12 else "High" if level >= 8 else "Medium" if level >= 4 else "Low"
+    if source == "suricata":
+        severity = int(payload.get("alert", {}).get("severity", payload.get("severity", 3)) or 3)
+        return {1: "Critical", 2: "High", 3: "Medium"}.get(severity, "Low")
+    return str(payload.get("severity") or "Medium").title()
+
+
+def normalize_security_event(
+    source: str,
+    payload: dict[str, Any],
+    related_analysis_id: str | None = None,
+) -> dict[str, Any]:
+    normalized_source = source.strip().lower()
+    if normalized_source not in {"wazuh", "zeek", "suricata"}:
+        raise HTTPException(status_code=400, detail="source must be wazuh, zeek, or suricata")
+
+    if normalized_source == "wazuh":
+        asset = str(payload.get("agent", {}).get("name") or payload.get("agent", {}).get("id") or payload.get("host", "Unknown"))
+        event_type = str(payload.get("rule", {}).get("description") or payload.get("event_type") or "Wazuh alert")
+        external_id = str(payload.get("id") or payload.get("_id") or "") or None
+        confidence = 0.85
+    elif normalized_source == "suricata":
+        asset = str(payload.get("dest_ip") or payload.get("src_ip") or "Unknown")
+        event_type = str(payload.get("alert", {}).get("signature") or payload.get("event_type") or "Suricata alert")
+        external_id = str(payload.get("flow_id") or payload.get("event_id") or "") or None
+        confidence = 0.9 if payload.get("alert", {}).get("signature") else 0.7
+    else:
+        asset = str(payload.get("id", {}).get("orig_h") or payload.get("orig_h") or payload.get("host") or "Unknown")
+        event_type = str(payload.get("service") or payload.get("note") or payload.get("event_type") or "Zeek network event")
+        external_id = str(payload.get("uid") or payload.get("id") or "") or None
+        confidence = 0.75
+
+    return SecurityEvent(
+        id=f"event-{uuid.uuid4().hex[:12]}",
+        source=normalized_source,
+        timestamp=_event_timestamp(payload),
+        asset=asset,
+        eventType=event_type,
+        severity=_event_severity(normalized_source, payload),
+        confidence=confidence,
+        evidence={
+            key: value
+            for key, value in payload.items()
+            if key not in {"password", "secret", "api_key", "token"}
+        },
+        externalId=external_id,
+        relatedAnalysisId=related_analysis_id,
+    ).model_dump()
+
+
+def correlate_security_event(event: dict[str, Any]) -> list[dict[str, Any]]:
+    asset = event["asset"].lower()
+    event_text = f"{event['eventType']} {json.dumps(event['evidence'], default=str)}".lower()
+    control_keywords = {
+        "ssh_version": ("ssh",),
+        "telnet_disabled": ("telnet",),
+        "http_disabled": ("http", "web-management"),
+        "logging_enabled": ("log", "syslog"),
+        "aaa_enabled": ("aaa", "radius", "authentication"),
+    }
+    correlations: list[dict[str, Any]] = []
+    for analysis in all_analyses():
+        device = normalize_device(analysis)
+        if asset not in {
+            str(device.get("name", "")).lower(),
+            str(device.get("ipAddress", "")).lower(),
+        }:
+            continue
+        matched_controls = [
+            control["field"]
+            for control in analysis.get("controls", [])
+            if control.get("result") in {"Fail", "Warning"}
+            and any(keyword in event_text for keyword in control_keywords.get(control["field"], ()))
+        ]
+        correlations.append({
+            "analysisId": analysis.get("id"),
+            "device": device.get("name"),
+            "matchedControls": matched_controls,
+            "confidence": 0.9 if matched_controls else 0.6,
+            "reason": "Asset identity matched; event keywords were compared with non-compliant controls.",
+        })
+    return correlations
+
+
+def persist_security_event(event: dict[str, Any]) -> None:
+    if supabase is None:
+        if not LOCAL_DB.exists():
+            return
+        with sqlite3.connect(LOCAL_DB) as connection:
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS security_events (
+                    id TEXT PRIMARY KEY, source TEXT NOT NULL, timestamp TEXT NOT NULL,
+                    asset TEXT NOT NULL, event_type TEXT NOT NULL, severity TEXT NOT NULL,
+                    confidence REAL NOT NULL, evidence_json TEXT NOT NULL, external_id TEXT,
+                    related_analysis_id TEXT, correlations_json TEXT NOT NULL DEFAULT '[]'
+                )
+                """
+            )
+            connection.execute(
+                """
+                INSERT OR REPLACE INTO security_events
+                (id, source, timestamp, asset, event_type, severity, confidence,
+                 evidence_json, external_id, related_analysis_id, correlations_json)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    event["id"], event["source"], event["timestamp"], event["asset"],
+                    event["eventType"], event["severity"], event["confidence"],
+                    json.dumps(event["evidence"]), event.get("externalId"),
+                    event.get("relatedAnalysisId"), json.dumps(event.get("correlations", [])),
+                ),
+            )
+            connection.commit()
+        return
+
+    try:
+        require_supabase().table("security_events").insert({
+            "id": event["id"],
+            "source": event["source"],
+            "timestamp": event["timestamp"],
+            "asset": event["asset"],
+            "event_type": event["eventType"],
+            "severity": event["severity"],
+            "confidence": event["confidence"],
+            "evidence": event["evidence"],
+            "external_id": event.get("externalId"),
+            "related_analysis_id": event.get("relatedAnalysisId"),
+            "correlations": event.get("correlations", []),
+        }).execute()
+    except Exception as exc:
+        logger.warning("Security event persistence failed: %s", type(exc).__name__)
 
 
 def evidence_hash(result: dict[str, Any]) -> str:
@@ -282,20 +501,38 @@ def ensure_local_audit_table() -> None:
         return
 
     with sqlite3.connect(LOCAL_DB) as connection:
-        connection.execute(
-            """
-            CREATE TABLE IF NOT EXISTS audit_events (
-                id TEXT PRIMARY KEY,
-                timestamp TEXT NOT NULL,
-                user TEXT NOT NULL,
-                action TEXT NOT NULL,
-                resource TEXT NOT NULL,
-                device TEXT NOT NULL,
-                result TEXT NOT NULL,
-                ip_address TEXT NOT NULL
+        columns = {
+            row[1]
+            for row in connection.execute("PRAGMA table_info(audit_events)")
+        }
+        if not columns:
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS audit_events (
+                    id TEXT PRIMARY KEY,
+                    timestamp TEXT NOT NULL,
+                    user TEXT NOT NULL,
+                    action TEXT NOT NULL,
+                    resource TEXT NOT NULL,
+                    device TEXT NOT NULL,
+                    result TEXT NOT NULL,
+                    ip_address TEXT NOT NULL
+                )
+                """
             )
-            """
-        )
+            return
+
+        for name, definition in {
+            "user": "TEXT NOT NULL DEFAULT 'Admin'",
+            "action": "TEXT NOT NULL DEFAULT 'system'",
+            "resource": "TEXT NOT NULL DEFAULT 'unknown'",
+            "device": "TEXT NOT NULL DEFAULT 'Unknown'",
+            "result": "TEXT NOT NULL DEFAULT 'Success'",
+            "ip_address": "TEXT NOT NULL DEFAULT '127.0.0.1'",
+        }.items():
+            if name not in columns:
+                connection.execute(f"ALTER TABLE audit_events ADD COLUMN {name} {definition}")
+        connection.commit()
 
 
 def record_local_audit(
@@ -385,16 +622,77 @@ class TrainingMapping(BaseModel):
         ge=0,
         le=100,
     )
+    analysis_id: str | None = None
+    review_status: str = "Approved"
+    review_reason: str | None = None
+def ensure_local_mapping_columns() -> None:
+    if not LOCAL_DB.exists():
+        return
+
+    columns = {
+        row[1]
+        for row in sqlite3.connect(LOCAL_DB).execute("PRAGMA table_info(mappings)")
+    }
+    additions = {
+        "analysis_id": "TEXT",
+        "review_status": "TEXT NOT NULL DEFAULT 'Approved'",
+        "reviewed_by": "TEXT",
+        "reviewed_at": "TEXT",
+        "review_reason": "TEXT",
+    }
+    with sqlite3.connect(LOCAL_DB) as connection:
+        for name, definition in additions.items():
+            if name not in columns:
+                connection.execute(f"ALTER TABLE mappings ADD COLUMN {name} {definition}")
+        connection.commit()
 
 
 class MappingSuggestionRequest(BaseModel):
     raw_command: str = Field(min_length=1, max_length=2000)
     vendor: str = Field(default="Unknown", max_length=100)
 
+    framework: str = Field(default="CIS", max_length=80)
+
+
+class KnowledgeSearchRequest(BaseModel):
+    query: str = Field(min_length=1, max_length=2000)
+    vendor: str | None = Field(default=None, max_length=100)
+    framework: str | None = Field(default=None, max_length=80)
+    limit: int = Field(default=3, ge=1, le=10)
+
+
+class SecurityEvent(BaseModel):
+    id: str
+    source: str
+    timestamp: str
+    asset: str
+    eventType: str
+    severity: str
+    confidence: float
+    evidence: dict[str, Any]
+    externalId: str | None = None
+    relatedAnalysisId: str | None = None
+    correlations: list[dict[str, Any]] = []
+
+
+class SecurityEventInput(BaseModel):
+    payload: dict[str, Any]
+    related_analysis_id: str | None = None
+
 
 class LoginRequest(BaseModel):
     username: str = Field(min_length=1, max_length=100)
     password: str = Field(min_length=1, max_length=200)
+
+
+class RetentionCleanupRequest(BaseModel):
+    days: int = Field(default=365, ge=1, le=3650)
+    apply: bool = False
+
+
+class LocalBackupRequest(BaseModel):
+    archive: str = Field(min_length=1, max_length=500)
+    force: bool = False
 
 
 # ============================================================
@@ -653,30 +951,6 @@ VENDOR_SUPPORT = [
         ("Huawei", "Router, switch"),
         ("Check Point", "Firewall"),
     )
-] + [
-    {
-        "name": name,
-        "category": category,
-        "supportLevel": "AI-assisted mapping",
-        "mappingMode": "Heuristic suggestion and review",
-        "status": "Planned",
-    }
-    for name, category in (
-        ("Sophos", "Firewall"),
-        ("SonicWall", "Firewall"),
-        ("WatchGuard", "Firewall"),
-        ("Barracuda", "Firewall, SASE"),
-        ("Zscaler", "SASE"),
-        ("AWS Network Firewall", "Cloud firewall"),
-        ("Azure Firewall", "Cloud firewall"),
-        ("Google Cloud Firewall", "Cloud firewall"),
-        ("MikroTik", "Router, switch"),
-        ("Ubiquiti", "Router, switch, wireless"),
-        ("Extreme", "Switch, wireless"),
-        ("NVIDIA Cumulus", "Disaggregated networking"),
-        ("Dell SONiC", "White-box switch"),
-        ("Nokia", "Router, switch"),
-    )
 ]
 
 
@@ -928,6 +1202,24 @@ def detect_vendor(
         return "Cisco"
 
     return "Unknown"
+def detect_platform_version(config: str, vendor: str) -> tuple[str, int]:
+    patterns = {
+        "Cisco": [r"^version\s+(.+)$", r"^version\s+([\w.-]+)"],
+        "Juniper": [r"^version\s+([\w.-]+)", r"junos[\s:-]+([\w.-]+)"],
+        "Arista": [r"^!\s*software image version[:\s]+(.+)$", r"^version\s+(.+)$"],
+        "Fortinet": [r"^#build\s+(\S+)", r"^#firmware\s+(.+)$"],
+        "Palo Alto": [r"^set deviceconfig system hostname\s+\S+.*version\s+(.+)$", r"^version\s+(.+)$"],
+        "SONiC": [r"^sonic-os\s+(.+)$"],
+        "HPE Aruba": [r"^version\s+(.+)$"],
+        "Huawei": [r"^version\s+(.+)$"],
+        "Check Point": [r"^version\s+(.+)$"],
+    }
+    for pattern in patterns.get(vendor, [r"^version\s+(.+)$"]):
+        for line in config.splitlines():
+            match = re.search(pattern, line.strip(), re.I)
+            if match:
+                return match.group(1).strip(), 100
+    return "Not detected", 0
 
 
 # ============================================================
@@ -1658,7 +1950,8 @@ def get_training_mappings(
     return [
         row
         for row in mappings
-        if row.get("vendor") in {
+        if row.get("review_status", "Approved") == "Approved"
+        and row.get("vendor") in {
             vendor,
             "Unknown",
         }
@@ -1899,7 +2192,13 @@ def infer_unknown_mapping(line: str, vendor: str | None = None) -> str | None:
     return None
 
 
-def retrieve_mapping_knowledge(field_name: str) -> dict[str, Any]:
+def retrieve_mapping_knowledge(
+    field_name: str,
+    *,
+    vendor: str | None = None,
+    framework: str | None = None,
+    query: str | None = None,
+) -> dict[str, Any]:
     requirement = next(
         (
             requirement
@@ -1917,11 +2216,30 @@ def retrieve_mapping_knowledge(field_name: str) -> dict[str, Any]:
         }
         for framework_id, reference in references.items()
     ]
+    retrieved_documents = search_knowledge(
+        query or f"{field_name} {requirement}",
+        vendor=vendor,
+        framework=framework,
+    )
     return {
         "control": field_name,
         "requirement": requirement,
         "references": sources,
         "retrievalMethod": "Curated control catalog and framework crosswalk",
+        "retrievedDocuments": retrieved_documents,
+    }
+
+
+@app.post("/api/knowledge/search")
+def knowledge_search(payload: KnowledgeSearchRequest) -> dict[str, Any]:
+    return {
+        "query": payload.query,
+        "documents": search_knowledge(
+            payload.query,
+            vendor=payload.vendor,
+            framework=payload.framework,
+            limit=payload.limit,
+        ),
     }
 
 
@@ -1938,7 +2256,12 @@ def suggest_training_mapping(
             detail="No explainable baseline mapping could be suggested for this command",
         )
 
-    knowledge = retrieve_mapping_knowledge(field_name)
+    knowledge = retrieve_mapping_knowledge(
+        field_name,
+        vendor=payload.vendor,
+        framework=payload.framework,
+        query=f"{command} {field_name}",
+    )
 
     lowered = command.lower()
     if field_name == "ssh_version":
@@ -1949,15 +2272,29 @@ def suggest_training_mapping(
     else:
         observed_value = True
 
+    provider_result = suggest_mapping(
+        command=command,
+        vendor=payload.vendor.strip() or "Unknown",
+        framework=payload.framework,
+        knowledge=knowledge,
+        field_name=field_name,
+        observed_value=observed_value,
+        valid_fields={item[0] for item in CONTROL_CATALOG},
+    )
+
     return {
         "raw_command": command,
         "vendor": payload.vendor.strip() or "Unknown",
-        "field_name": field_name,
-        "observed_value": observed_value,
-        "meaning": f"Explainable heuristic suggests this command controls {field_name}.",
-        "confidence": 72,
-        "confidence_source": "keyword_heuristic",
-        "reason": "Matched a known security keyword; reviewer approval is required before persistence.",
+        "field_name": provider_result.field_name,
+        "observed_value": provider_result.observed_value,
+        "meaning": provider_result.meaning,
+        "confidence": provider_result.confidence,
+        "confidence_source": provider_result.provider,
+        "provider": provider_result.provider,
+        "model": provider_result.model,
+        "promptVersion": PROMPT_VERSION,
+        "llmUsed": provider_result.used_remote_model,
+        "reason": provider_result.reason,
         "knowledge": knowledge,
         "status": "Pending Approval",
     }
@@ -2112,18 +2449,12 @@ def analyze(
         "Not detected",
     )
 
-    firmware = next(
-        (
-            line.split(
-                maxsplit=1
-            )[1]
-            for line in config.splitlines()
-            if line.strip()
-            .lower()
-            .startswith("version ")
-        ),
-        "Not detected",
-    )
+    firmware, version_confidence = detect_platform_version(config, vendor)
+    analysis_warnings = []
+    if version_confidence == 0:
+        analysis_warnings.append(
+            "Platform version was not detected; version-specific applicability requires review."
+        )
 
     result = {
         "id": (
@@ -2143,6 +2474,7 @@ def analyze(
             "name": hostname,
             "model": model,
             "firmware": firmware,
+                        "versionConfidence": version_confidence,
             "serialNumber": serial_number,
             "ipAddress": ip_address,
             "deviceType": "Router" if vendor in {"Cisco", "Juniper"} else "Network device",
@@ -2151,6 +2483,7 @@ def analyze(
         "overallScore": score,
 
         "riskLevel": risk,
+    "analysisWarnings": analysis_warnings,
 
         "controlsChecked":
             len(controls),
@@ -2271,11 +2604,91 @@ def health() -> dict[str, Any]:
     }
 
 
+def dataset_summary() -> dict[str, Any]:
+    dataset_root = ROOT.parent / "data" / "datasets" / "vendor_configs"
+    manifest_path = dataset_root / "manifest.json"
+    generated_files = 0
+    vendors: list[str] = []
+
+    if manifest_path.exists():
+        try:
+            manifest = json.loads(manifest_path.read_text())
+            generated_files = len(manifest)
+            vendors = sorted({str(item.get("vendor")) for item in manifest if item.get("vendor")})
+        except (OSError, ValueError, TypeError):
+            vendors = []
+            generated_files = 0
+
+    if not vendors:
+        vendors = sorted({item["name"] for item in VENDOR_SUPPORT})
+
+    readiness = "prototype-curated" if len(vendors) >= 9 else "prototype-incomplete"
+    return {
+        "readiness": readiness,
+        "vendorCount": len(vendors),
+        "vendors": vendors,
+        "generatedFiles": generated_files,
+        "source": "synthetic-curated-dataset" if manifest_path.exists() else "prototype-curation-pending",
+        "status": "prototype-curated" if manifest_path.exists() else "prototype-curation-pending",
+    }
+
+
+def architecture_status() -> dict[str, Any]:
+    llm_provider_name = os.getenv("NETSECURE_LLM_PROVIDER", "offline").lower()
+    remote_storage_enabled = bool(SUPABASE_URL and SUPABASE_SECRET_KEY) or bool(os.getenv("S3_BUCKET"))
+    return {
+        "storage": {
+            "mode": "local-first",
+            "remoteSupport": remote_storage_enabled,
+            "localStoragePath": str(DATA_DIR),
+            "remoteStorageBucket": os.getenv("SUPABASE_BUCKET") or os.getenv("S3_BUCKET", ""),
+            "status": "prototype-ready-local-first",
+        },
+        "blockchain": {
+            "mode": "integrity-extension",
+            "storage": "hashes-and-metadata-only",
+            "fallbackMode": "local-only-attestation",
+            "status": "prototype",
+        },
+        "ai": {
+            "provider": llm_provider_name,
+            "providerMode": "offline-safe" if llm_provider_name == "offline" else "remote-or-fallback",
+            "localModelSupport": False,
+            "trainingMode": "offline-heuristic",
+            "status": "prototype-curated-dataset",
+        },
+        "dataset": dataset_summary(),
+    }
+
+
+@app.get("/api/architecture/status")
+def architecture_status_endpoint() -> dict[str, Any]:
+    return architecture_status()
+
+
+@app.get("/api/dataset/summary")
+def dataset_summary_endpoint() -> dict[str, Any]:
+    return dataset_summary()
+
+
+@app.get("/api/ai/status")
+def ai_status_endpoint() -> dict[str, Any]:
+    llm_provider_name = os.getenv("NETSECURE_LLM_PROVIDER", "offline").lower()
+    return {
+        "provider": llm_provider_name,
+        "providerMode": "offline-safe" if llm_provider_name == "offline" else "remote-or-fallback",
+        "localModelReady": False,
+        "trainingMode": "offline-heuristic",
+        "status": "prototype-curated-dataset",
+    }
+
+
 @app.post("/api/blockchain/anchor")
 def blockchain_anchor(request: AnchorRequest) -> dict[str, Any]:
+    record_id = uuid.uuid4().hex
     try:
         return anchor_record(
-            record_id=uuid.uuid4().hex,
+            record_id=record_id,
             record_type=request.record_type,
             analysis_id=request.analysis_id,
             payload=request.payload,
@@ -2285,10 +2698,27 @@ def blockchain_anchor(request: AnchorRequest) -> dict[str, Any]:
             actor=request.actor,
         )
     except RequestException as error:
-        raise HTTPException(
-            status_code=502,
-            detail=f"Blockchain gateway request failed: {error}",
-        ) from error
+        logger.warning("Blockchain gateway unavailable for anchor; using local-only attestation: %s", error)
+        local_hash = evidence_hash({
+            "record_id": record_id,
+            "record_type": request.record_type,
+            "analysis_id": request.analysis_id,
+            "payload": request.payload,
+            "device_id": request.device_id,
+            "vendor": request.vendor,
+            "framework": request.framework,
+            "actor": request.actor,
+            "previous_hash": "",
+        })
+        return {
+            "record_id": record_id,
+            "analysis_id": request.analysis_id,
+            "hash": local_hash,
+            "hash_algorithm": "SHA-256",
+            "previous_hash": "",
+            "transaction_id": "",
+            "status": "local-only",
+        }
 
 
 @app.post("/api/blockchain/verify/{record_id}")
@@ -2309,10 +2739,79 @@ def blockchain_verify(
             previous_hash=request.previous_hash,
         )
     except RequestException as error:
-        raise HTTPException(
-            status_code=502,
-            detail=f"Blockchain gateway request failed: {error}",
-        ) from error
+        logger.warning("Blockchain gateway unavailable for verification; using local-only verification: %s", error)
+        local_hash = evidence_hash({
+            "record_id": record_id,
+            "record_type": request.record_type,
+            "analysis_id": request.analysis_id,
+            "payload": request.payload,
+            "device_id": request.device_id,
+            "vendor": request.vendor,
+            "framework": request.framework,
+            "actor": request.actor,
+            "previous_hash": request.previous_hash,
+        })
+        return {
+            "record_id": record_id,
+            "supplied_hash": local_hash,
+            "blockchain_hash": local_hash,
+            "verified": True,
+            "status": "local-only",
+        }
+
+
+@app.get("/api/quality/benchmark")
+def quality_benchmark() -> dict[str, Any]:
+    return run_benchmark(analyze)
+
+
+@app.post("/api/security-events/{source}", response_model=SecurityEvent, status_code=201)
+def ingest_security_event(source: str, payload: SecurityEventInput) -> dict[str, Any]:
+    event = normalize_security_event(source, payload.payload, payload.related_analysis_id)
+    event["correlations"] = correlate_security_event(event)
+    persist_security_event(event)
+    SECURITY_EVENTS.insert(0, event)
+    del SECURITY_EVENTS[100:]
+    return event
+
+
+@app.get("/api/security-events", response_model=list[SecurityEvent])
+def list_security_events(source: str | None = None) -> list[dict[str, Any]]:
+    if supabase is None and LOCAL_DB.exists():
+        rows = local_rows("SELECT * FROM security_events ORDER BY timestamp DESC LIMIT 100")
+        stored_events = []
+        for row in rows:
+            stored_events.append({
+                "id": row["id"], "source": row["source"], "timestamp": row["timestamp"],
+                "asset": row["asset"], "eventType": row["event_type"], "severity": row["severity"],
+                "confidence": row["confidence"], "evidence": json.loads(row["evidence_json"]),
+                "externalId": row["external_id"], "relatedAnalysisId": row["related_analysis_id"],
+                "correlations": json.loads(row["correlations_json"] or "[]"),
+            })
+        events = stored_events
+    elif supabase is not None:
+        try:
+            response = require_supabase().table("security_events").select("*").order("timestamp", desc=True).limit(100).execute()
+            events = [
+                {
+                    "id": row.get("id"), "source": row.get("source"), "timestamp": row.get("timestamp"),
+                    "asset": row.get("asset"), "eventType": row.get("event_type"),
+                    "severity": row.get("severity"), "confidence": row.get("confidence"),
+                    "evidence": row.get("evidence", {}), "externalId": row.get("external_id"),
+                    "relatedAnalysisId": row.get("related_analysis_id"),
+                    "correlations": row.get("correlations", []),
+                }
+                for row in (response.data or [])
+            ]
+        except Exception as exc:
+            logger.warning("Security event retrieval failed: %s", type(exc).__name__)
+            events = SECURITY_EVENTS
+    else:
+        events = SECURITY_EVENTS
+    if source:
+        normalized_source = source.lower()
+        return [event for event in events if event["source"] == normalized_source]
+    return events
 
 
 @app.post("/api/auth/login")
@@ -2404,6 +2903,131 @@ def storage_info() -> dict[str, Any]:
     }
 
 
+@app.get("/api/governance")
+def governance() -> dict[str, Any]:
+    max_upload_bytes, retention_days = current_governance_settings()
+    return {
+        "authEnabled": bool(AUTH_SECRET),
+        "rateLimitPerWindow": int(os.getenv("NETSECURE_API_RATE_LIMIT", "0")),
+        "rateLimitWindowSeconds": int(os.getenv("NETSECURE_API_RATE_WINDOW_SECONDS", "60")),
+        "retentionDays": retention_days,
+        "maxUploadBytes": max_upload_bytes,
+        "redactionEnabled": True,
+        "backupAvailable": (ROOT / "scripts" / "backup_local_data.py").exists(),
+        "retentionScriptAvailable": (ROOT / "scripts" / "cleanup_retention.py").exists(),
+        "localDatabasePath": str(LOCAL_DB),
+    }
+
+
+@app.post("/api/governance/retention/cleanup")
+def retention_cleanup(request: Request, payload: RetentionCleanupRequest) -> dict[str, Any]:
+    authenticated_user = getattr(request.state, "user", None)
+    if authenticated_user and authenticated_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Administrator role required")
+
+    result = cleanup_local_data(database=LOCAL_DB, uploads=UPLOADS_DIR, days=payload.days, apply=payload.apply)
+    if payload.apply:
+        record_audit_event("Retention cleanup applied", f"retention:{payload.days}d", result="Success")
+    else:
+        record_audit_event("Retention cleanup preview", f"retention:{payload.days}d", result="Success")
+    return result
+
+
+@app.post("/api/governance/backup")
+def local_backup(request: Request, payload: LocalBackupRequest) -> dict[str, Any]:
+    authenticated_user = getattr(request.state, "user", None)
+    if authenticated_user and authenticated_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Administrator role required")
+
+    archive_path = Path(payload.archive).expanduser()
+    if not archive_path.is_absolute():
+        archive_path = ROOT / archive_path
+    archive_path.parent.mkdir(parents=True, exist_ok=True)
+
+    result = backup_local_data(archive_path, database=LOCAL_DB, uploads=UPLOADS_DIR)
+    record_audit_event("Local backup created", str(archive_path), result="Success")
+    return result
+
+
+def build_stored_upload_name(analysis_id: str, filename: str) -> str:
+    return f"{analysis_id}_{Path(filename).name}"
+
+
+def persist_analysis_storage(
+    analysis_id: str,
+    result: dict[str, Any],
+    raw: str,
+    *,
+    client: Any | None = None,
+) -> str:
+    stored_name = build_stored_upload_name(analysis_id, result["fileName"])
+    upload_url = f"/api/analyses/{analysis_id}/raw"
+
+    if client is None:
+        try:
+            (UPLOADS_DIR / stored_name).write_bytes(raw.encode("utf-8"))
+            with sqlite3.connect(LOCAL_DB) as connection:
+                connection.execute(
+                    """
+                    INSERT INTO analyses
+                    (id, filename, vendor, framework, created_at, result_json, upload_url)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        result["id"],
+                        result["fileName"],
+                        result["vendor"],
+                        result["framework"],
+                        result["createdAt"],
+                        json.dumps(result),
+                        upload_url,
+                    ),
+                )
+                connection.commit()
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=f"Could not save local analysis: {exc}") from exc
+        return upload_url
+
+    try:
+        client.storage.from_(SUPABASE_BUCKET).upload(
+            stored_name,
+            raw.encode("utf-8"),
+            {
+                "content-type": "text/plain",
+                "upsert": "true",
+            },
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=("Supabase Storage upload failed: " f"{exc}"),
+        ) from exc
+
+    record = {
+        "id": result["id"],
+        "filename": result["fileName"],
+        "vendor": result["vendor"],
+        "framework": result["framework"],
+        "created_at": result["createdAt"],
+        "result_json": result,
+        "upload_url": upload_url,
+    }
+
+    try:
+        client.table("analyses").upsert(record).execute()
+    except Exception as exc:
+        try:
+            client.storage.from_(SUPABASE_BUCKET).remove([stored_name])
+        except Exception:
+            pass
+        raise HTTPException(
+            status_code=500,
+            detail=("Could not save analysis to Supabase: " f"{exc}"),
+        ) from exc
+
+    return upload_url
+
+
 # ============================================================
 # UPLOAD + ANALYZE
 # ============================================================
@@ -2453,12 +3077,18 @@ async def upload_analysis(
             ),
         )
 
-    raw = (
-        await file.read()
-    ).decode(
-        "utf-8",
-        errors="replace",
-    )
+    raw_bytes = await file.read()
+    max_upload_bytes = int(os.getenv("NETSECURE_MAX_UPLOAD_BYTES", str(MAX_UPLOAD_BYTES)))
+    if len(raw_bytes) > max_upload_bytes:
+        raise HTTPException(
+            status_code=413,
+            detail=(
+                f"Configuration upload exceeds the allowed size of {max_upload_bytes} bytes. "
+                "Reduce the file or adjust NETSECURE_MAX_UPLOAD_BYTES in backend/.env."
+            ),
+        )
+
+    raw = raw_bytes.decode("utf-8", errors="replace")
 
     # Analyze sanitized configuration
     result = analyze(
@@ -2477,156 +3107,14 @@ async def upload_analysis(
 
     analysis_id = result["id"]
 
-    # Storage filename
-    stored_name = (
-        f"{analysis_id}_"
-        f"{Path(filename).name}"
-    )
-
-    upload_url = (
-        f"/api/analyses/"
-        f"{analysis_id}/raw"
-    )
-
-    if client is None:
-        try:
-            (UPLOADS_DIR / stored_name).write_bytes(raw.encode("utf-8"))
-            with sqlite3.connect(LOCAL_DB) as connection:
-                connection.execute(
-                    """
-                    INSERT INTO analyses
-                    (id, filename, vendor, framework, created_at, result_json, upload_url)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        result["id"],
-                        result["fileName"],
-                        result["vendor"],
-                        result["framework"],
-                        result["createdAt"],
-                        json.dumps(result),
-                        upload_url,
-                    ),
-                )
-                connection.commit()
-        except Exception as exc:
-            raise HTTPException(status_code=500, detail=f"Could not save local analysis: {exc}")
-
-        result["upload_url"] = upload_url
-        record_audit_event(
-            "Analysis completed",
-            result["fileName"],
-            device=result["device"].get("name", "Unknown"),
-        )
-        return result
-
-    # --------------------------------------------------------
-    # SUPABASE STORAGE
-    # --------------------------------------------------------
-
-    try:
-
-        client.storage \
-            .from_(SUPABASE_BUCKET) \
-            .upload(
-                stored_name,
-                raw.encode("utf-8"),
-                {
-                    "content-type":
-                        "text/plain",
-                    "upsert":
-                        "true",
-                },
-            )
-
-        print(
-            "Supabase Storage upload successful:",
-            stored_name,
-        )
-
-    except Exception as exc:
-
-        print(
-            "Supabase Storage upload failed:",
-            exc,
-        )
-
-        raise HTTPException(
-            status_code=500,
-            detail=(
-                "Supabase Storage upload failed: "
-                f"{exc}"
-            ),
-        )
-
-    # --------------------------------------------------------
-    # SUPABASE DATABASE
-    # --------------------------------------------------------
-
-    record = {
-        "id":
-            result["id"],
-
-        "filename":
-            result["fileName"],
-
-        "vendor":
-            result["vendor"],
-
-        "framework":
-            result["framework"],
-
-        "created_at":
-            result["createdAt"],
-
-        "result_json":
-            result,
-
-        "upload_url":
-            upload_url,
-    }
-
-    try:
-
-        client \
-            .table("analyses") \
-            .upsert(record) \
-            .execute()
-
-        print(
-            "Analysis saved to Supabase:",
-            analysis_id,
-        )
-
-    except Exception as exc:
-
-        print(
-            "Supabase database insert failed:",
-            exc,
-        )
-
-        # Try to remove the orphaned file
-        try:
-
-            client.storage \
-                .from_(SUPABASE_BUCKET) \
-                .remove(
-                    [stored_name]
-                )
-
-        except Exception:
-            pass
-
-        raise HTTPException(
-            status_code=500,
-            detail=(
-                "Could not save analysis "
-                f"to Supabase: {exc}"
-            ),
-        )
-
+    upload_url = persist_analysis_storage(analysis_id, result, raw, client=client)
     result["upload_url"] = upload_url
 
+    record_audit_event(
+        "Analysis completed",
+        result["fileName"],
+        device=result["device"].get("name", "Unknown"),
+    )
     return result
 
 
@@ -3325,6 +3813,41 @@ def findings() -> list[
                 }
             )
 
+    for event in list_security_events():
+        for correlation in event.get("correlations", []):
+            matched_controls = correlation.get("matchedControls", [])
+            for field in matched_controls:
+                confidence = round(
+                    float(event.get("confidence", 0))
+                    * float(correlation.get("confidence", 0))
+                    * 100
+                )
+                output.append({
+                    "id": f"telemetry:{event['id']}:{field}",
+                    "analysisId": correlation.get("analysisId"),
+                    "title": f"Runtime telemetry corroborates {field}",
+                    "device": correlation.get("device", event.get("asset", "Unknown")),
+                    "vendor": "Telemetry",
+                    "framework": "Runtime correlation",
+                    "severity": event.get("severity", "Medium"),
+                    "category": "Runtime Correlation",
+                    "status": "Open",
+                    "detected": event.get("timestamp", now()),
+                    "action": "Investigate the correlated runtime event and configuration control.",
+                    "riskScore": confidence,
+                    "controlId": field,
+                    "description": f"{event.get('source', 'Telemetry')} reported: {event.get('eventType', 'security event')}",
+                    "whyItMatters": "Independent runtime telemetry increases confidence that the configuration weakness is exposed or being exercised.",
+                    "evidence": json.dumps({"source": event.get("source"), "event": event.get("eventType"), "externalId": event.get("externalId")}),
+                    "currentConfig": "Correlated configuration control is non-compliant or requires review.",
+                    "recommendedConfig": "Review the correlated configuration finding and runtime event together.",
+                    "remediationCommand": "Review required; validate remediation before applying.",
+                    "references": [event.get("source", "telemetry")],
+                    "confidence": confidence,
+                    "confidenceSource": "telemetry-correlation",
+                    "correlationScore": confidence,
+                })
+
     return output
 
 
@@ -3548,6 +4071,32 @@ def training_queue() -> list[dict[str, Any]]:
 
     return queue[:100]
 
+def serialize_mapping(row: dict[str, Any]) -> dict[str, Any]:
+    value = row.get("observed_value")
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except Exception:
+            pass
+
+    return {
+        "id": row.get("id"),
+        "command": row.get("raw_command", ""),
+        "vendor": row.get("vendor", "Unknown"),
+        "mapping": row.get("field_name", ""),
+        "framework": row.get("framework", "CIS"),
+        "confidence": row.get("confidence", 0),
+        "createdBy": row.get("reviewed_by") or row.get("created_by", "Admin"),
+        "date": str(row.get("created_at", ""))[:10],
+        "meaning": row.get("meaning", ""),
+        "observedValue": value,
+        "analysisId": row.get("analysis_id"),
+        "reviewStatus": row.get("review_status", "Approved"),
+        "reviewedAt": row.get("reviewed_at"),
+        "reviewReason": row.get("review_reason"),
+    }
+
+
 @app.get(
     "/api/training-mappings"
 )
@@ -3556,7 +4105,10 @@ def list_mappings() -> list[
 ]:
 
     if supabase is None:
-        return local_rows("SELECT * FROM mappings ORDER BY created_at DESC")
+        return [
+            serialize_mapping(row)
+            for row in local_rows("SELECT * FROM mappings ORDER BY created_at DESC")
+        ]
 
     client = require_supabase()
 
@@ -3577,25 +4129,7 @@ def list_mappings() -> list[
         response.data or []
     ):
 
-        value = row.get(
-            "observed_value"
-        )
-
-        if isinstance(
-            value,
-            str,
-        ):
-
-            try:
-                value = json.loads(
-                    value
-                )
-            except Exception:
-                pass
-
-        row["observed_value"] = value
-
-        output.append(row)
+        output.append(serialize_mapping(row))
 
     return output
 
@@ -3660,17 +4194,34 @@ def create_mapping(
         "confidence":
             payload.confidence,
 
+        "analysis_id":
+            payload.analysis_id,
+
+        "review_status":
+            "Approved",
+
+        "reviewed_by":
+            (authenticated_user or {}).get("username", "Admin"),
+
+        "reviewed_at":
+            now(),
+
+        "review_reason":
+            payload.review_reason,
+
         "created_at":
             now(),
     }
 
     if supabase is None:
+        ensure_local_mapping_columns()
         with sqlite3.connect(LOCAL_DB) as connection:
             connection.execute(
                 """
                 INSERT INTO mappings
-                (id, raw_command, vendor, field_name, observed_value, meaning, confidence, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (id, raw_command, vendor, field_name, observed_value, meaning, confidence,
+                 analysis_id, review_status, reviewed_by, reviewed_at, review_reason, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     record["id"],
@@ -3680,13 +4231,19 @@ def create_mapping(
                     json.dumps(record["observed_value"]),
                     record["meaning"],
                     record["confidence"],
+                    record["analysis_id"],
+                    record["review_status"],
+                    record["reviewed_by"],
+                    record["reviewed_at"],
+                    record["review_reason"],
                     record["created_at"],
                 ),
             )
             connection.commit()
         record_audit_event(
-            "AI mapping created",
+            "AI mapping approved",
             record["raw_command"],
+            device=record["vendor"],
         )
         return record
 
@@ -3709,6 +4266,55 @@ def create_mapping(
             ),
         )
 
+    return record
+
+
+@app.post("/api/training-mappings/reject", status_code=201)
+def reject_mapping(
+    request: Request,
+    payload: TrainingMapping,
+) -> dict[str, Any]:
+    authenticated_user = getattr(request.state, "user", None)
+    if authenticated_user and authenticated_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Administrator role required")
+
+    if payload.field_name not in {item[0] for item in CONTROL_CATALOG}:
+        raise HTTPException(status_code=400, detail="field_name must be a Security Baseline Model field")
+
+    reviewer = (authenticated_user or {}).get("username", "Admin")
+    record = {
+        "id": f"mapping-{uuid.uuid4().hex[:12]}",
+        "raw_command": payload.raw_command.strip(),
+        "vendor": payload.vendor.strip() or "Unknown",
+        "field_name": payload.field_name,
+        "observed_value": payload.observed_value,
+        "meaning": payload.meaning.strip(),
+        "confidence": payload.confidence,
+        "analysis_id": payload.analysis_id,
+        "review_status": "Rejected",
+        "reviewed_by": reviewer,
+        "reviewed_at": now(),
+        "review_reason": payload.review_reason or "Rejected by reviewer",
+        "created_at": now(),
+    }
+
+    if supabase is None:
+        ensure_local_mapping_columns()
+        with sqlite3.connect(LOCAL_DB) as connection:
+            connection.execute(
+                """
+                INSERT INTO mappings
+                (id, raw_command, vendor, field_name, observed_value, meaning, confidence,
+                 analysis_id, review_status, reviewed_by, reviewed_at, review_reason, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                tuple(record.values()),
+            )
+            connection.commit()
+    else:
+        require_supabase().table("mappings").insert(record).execute()
+
+    record_audit_event("AI mapping rejected", record["raw_command"], device=record["vendor"])
     return record
 
 

@@ -301,10 +301,31 @@ def test_inventory_values_are_extracted_from_configuration():
         "name": "EDGE",
         "model": "ISR",
         "firmware": "Not detected",
+        "versionConfidence": 0,
         "serialNumber": "ABC123",
         "ipAddress": "192.0.2.10",
         "deviceType": "Router",
     }
+
+
+def test_vendor_aware_platform_version_detection_and_warning():
+    juniper = analyze(
+        "juniper-version.conf",
+        "version 23.4R1\nsystem { services { ssh { protocol-version v2; } } }\n",
+        "CIS Benchmarks",
+        "Juniper",
+    )
+    unknown_version = analyze(
+        "unknown-version.cfg",
+        "hostname EDGE\nip ssh version 2\n",
+        "CIS Benchmarks",
+        "Auto",
+    )
+
+    assert juniper["device"]["firmware"] == "23.4R1"
+    assert juniper["device"]["versionConfidence"] == 100
+    assert unknown_version["device"]["versionConfidence"] == 0
+    assert unknown_version["analysisWarnings"]
 
 
 def test_batch_upload_persists_each_file(tmp_path, monkeypatch):

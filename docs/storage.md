@@ -15,6 +15,12 @@ Local developer defaults
 
 - By default the app uses SQLite at `backend/data/netsecureai.sqlite3` and local
   uploads in `backend/data/uploads/`.
+- This is intentionally local-first and production-oriented for prototype deployment:
+  the database and raw configuration storage remain usable without a cloud dependency,
+  while optional Supabase/Postgres and S3-compatible storage can be enabled for remote
+  production use.
+- The architecture is designed to separate raw configuration storage from analysis metadata,
+  keeping the local-first workflow operational even when the remote path is unavailable.
 
 Installing production deps
 
