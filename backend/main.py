@@ -629,18 +629,41 @@ def ensure_local_mapping_columns() -> None:
     if not LOCAL_DB.exists():
         return
 
-    columns = {
-        row[1]
-        for row in sqlite3.connect(LOCAL_DB).execute("PRAGMA table_info(mappings)")
-    }
-    additions = {
-        "analysis_id": "TEXT",
-        "review_status": "TEXT NOT NULL DEFAULT 'Approved'",
-        "reviewed_by": "TEXT",
-        "reviewed_at": "TEXT",
-        "review_reason": "TEXT",
-    }
     with sqlite3.connect(LOCAL_DB) as connection:
+        columns = {
+            row[1]
+            for row in connection.execute("PRAGMA table_info(mappings)")
+        }
+        if not columns:
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS mappings (
+                    id TEXT PRIMARY KEY,
+                    raw_command TEXT NOT NULL,
+                    vendor TEXT NOT NULL DEFAULT 'Unknown',
+                    field_name TEXT NOT NULL,
+                    observed_value TEXT,
+                    meaning TEXT NOT NULL,
+                    confidence REAL NOT NULL DEFAULT 92,
+                    analysis_id TEXT,
+                    review_status TEXT NOT NULL DEFAULT 'Approved',
+                    reviewed_by TEXT,
+                    reviewed_at TEXT,
+                    review_reason TEXT,
+                    created_at TEXT NOT NULL
+                )
+                """
+            )
+            connection.commit()
+            return
+
+        additions = {
+            "analysis_id": "TEXT",
+            "review_status": "TEXT NOT NULL DEFAULT 'Approved'",
+            "reviewed_by": "TEXT",
+            "reviewed_at": "TEXT",
+            "review_reason": "TEXT",
+        }
         for name, definition in additions.items():
             if name not in columns:
                 connection.execute(f"ALTER TABLE mappings ADD COLUMN {name} {definition}")
