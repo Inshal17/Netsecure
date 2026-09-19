@@ -88,6 +88,7 @@ export const startAnalysis = (fileName: string, vendor: string, framework: strin
       { id: 'CIS-NET-02', framework: 'CIS', requirement: 'Secure administrative access', result: 'Pass', severity: 'High', evidence: 'SSH version 2 configured', remediation: 'Maintain secure access policy' },
       { id: 'NIST-AU-02', framework: 'NIST', requirement: 'Centralized audit log export', result: 'Warning', severity: 'Medium', evidence: 'logging destination not configured', remediation: 'Configure logging host' },
     ],
+    blockchain: undefined,
   }
 
   return { job, result }

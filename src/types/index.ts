@@ -40,6 +40,17 @@ export interface AnalysisJob {
   completed: string | null
 }
 
+export interface BlockchainAttestation {
+  status?: string
+  record_id?: string
+  analysis_id?: string
+  hash?: string
+  hash_algorithm?: string
+  tx_id?: string
+  verified?: boolean
+  error?: string
+}
+
 export interface AnalysisResult {
   id: string
   jobId: string
@@ -55,6 +66,7 @@ export interface AnalysisResult {
   controls: ControlResult[]
   summary: string
   timestamp: string
+  blockchain?: BlockchainAttestation
 }
 
 export interface Finding {
