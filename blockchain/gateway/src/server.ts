@@ -156,6 +156,7 @@ app.post("/anchor", async (req: Request, res: Response) => {
           actor,
           previous_hash,
         ],
+        endorsingOrganizations: ["Org1MSP", "Org2MSP"],
       }
     );
 

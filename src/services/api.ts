@@ -139,6 +139,7 @@ export const startAnalysis = async (file: File, vendor: string, framework: strin
     summary: analysis.summary,
     timestamp: analysis.createdAt,
     controls: analysis.controls,
+    blockchain: analysis.blockchain,
   }
   runtimeJobs.unshift(job)
   runtimeResults.unshift(result)

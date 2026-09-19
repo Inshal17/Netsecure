@@ -164,6 +164,14 @@ DATA_DIR.mkdir(exist_ok=True)
 UPLOADS_DIR = DATA_DIR / "uploads"
 UPLOADS_DIR.mkdir(exist_ok=True)
 LOCAL_DB = DATA_DIR / "netsecureai.sqlite3"
+LOCAL_SCHEMA = ROOT / "migrations" / "0001_initial.sql"
+
+
+def ensure_local_database_schema() -> None:
+    LOCAL_DB.parent.mkdir(parents=True, exist_ok=True)
+    schema = LOCAL_SCHEMA.read_text(encoding="utf-8")
+    with sqlite3.connect(LOCAL_DB) as connection:
+        connection.executescript(schema)
 
 
 # ============================================================
@@ -173,6 +181,8 @@ LOCAL_DB = DATA_DIR / "netsecureai.sqlite3"
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     validate_runtime_configuration()
+    if supabase is None:
+        ensure_local_database_schema()
     yield
 
 
@@ -488,9 +498,7 @@ def require_supabase():
 
 
 def local_rows(query: str, parameters: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
-    if not LOCAL_DB.exists():
-        return []
-
+    ensure_local_database_schema()
     with sqlite3.connect(LOCAL_DB) as connection:
         connection.row_factory = sqlite3.Row
         return [dict(row) for row in connection.execute(query, parameters)]
@@ -1685,6 +1693,41 @@ def parse_known(
                     100,
                     "deterministic",
                 )
+
+                recognized.add(text)
+
+            elif lower.startswith("set allowaccess "):
+                allowed = set(lower.split()[2:])
+
+                if "telnet" not in allowed:
+                    set_field(
+                        baseline,
+                        "telnet_disabled",
+                        True,
+                        text,
+                        95,
+                        "deterministic",
+                    )
+
+                if "http" not in allowed:
+                    set_field(
+                        baseline,
+                        "http_disabled",
+                        True,
+                        text,
+                        95,
+                        "deterministic",
+                    )
+
+                if "ssh" in allowed:
+                    set_field(
+                        baseline,
+                        "ssh_version",
+                        "2",
+                        text,
+                        70,
+                        "deterministic",
+                    )
 
                 recognized.add(text)
 
@@ -3128,7 +3171,54 @@ async def upload_analysis(
 
     analysis_id = result["id"]
 
-    upload_url = persist_analysis_storage(analysis_id, result, raw, client=client)
+    # --------------------------------------------------------
+    # BLOCKCHAIN ATTESTATION
+    # --------------------------------------------------------
+    blockchain_record = None
+
+    try:
+        blockchain_record = anchor_record(
+            record_id=f"analysis-{analysis_id}",
+            record_type="compliance_analysis",
+            analysis_id=analysis_id,
+            payload={
+                "evidence_hash": result["evidenceHash"],
+                "hash_algorithm": result["hashAlgorithm"],
+                "overall_score": result["overallScore"],
+                "risk_level": result["riskLevel"],
+                "controls_checked": result["controlsChecked"],
+                "passed": result["passed"],
+                "failed": result["failed"],
+                "warnings": result["warnings"],
+                "vendor": result["vendor"],
+                "framework": result["framework"],
+                "device": result["device"],
+            },
+            device_id=result["device"].get("name"),
+            vendor=result["vendor"],
+            framework=result["framework"],
+            actor="system",
+        )
+
+        result["blockchain"] = blockchain_record
+
+    except Exception as exc:
+        logger.exception(
+            "Blockchain anchoring failed for analysis %s",
+            analysis_id,
+        )
+
+        result["blockchain"] = {
+            "status": "failed",
+            "error": str(exc),
+        }
+
+    upload_url = persist_analysis_storage(
+        analysis_id,
+        result,
+        raw,
+        client=client,
+    )
     result["upload_url"] = upload_url
 
     record_audit_event(

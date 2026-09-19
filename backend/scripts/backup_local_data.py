@@ -13,6 +13,7 @@ import shutil
 import sqlite3
 import tarfile
 import tempfile
+from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -20,6 +21,21 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
 LOCAL_DB = DATA_DIR / "netsecureai.sqlite3"
 UPLOADS_DIR = DATA_DIR / "uploads"
+
+
+def _safe_extract(bundle: tarfile.TarFile, destination: Path) -> None:
+    destination = destination.resolve()
+    for member in bundle.getmembers():
+        if member.issym() or member.islnk() or not (member.isdir() or member.isfile()):
+            raise ValueError("Unsupported file type in backup archive")
+
+        target = (destination / member.name).resolve()
+        try:
+            target.relative_to(destination)
+        except ValueError as error:
+            raise ValueError("Backup archive contains an unsafe path") from error
+
+        bundle.extract(member, destination)
 
 
 def backup_local_data(
@@ -33,7 +49,7 @@ def backup_local_data(
     with tempfile.TemporaryDirectory() as temporary:
         staging = Path(temporary)
         snapshot = staging / "netsecureai.sqlite3"
-        with sqlite3.connect(database) as source, sqlite3.connect(snapshot) as target:
+        with closing(sqlite3.connect(database)) as source, closing(sqlite3.connect(snapshot)) as target:
             source.backup(target)
         manifest = {
             "created_at": datetime.now(timezone.utc).isoformat(),
@@ -65,7 +81,7 @@ def restore_local_data(
     with tempfile.TemporaryDirectory() as temporary:
         staging = Path(temporary)
         with tarfile.open(archive, "r:gz") as bundle:
-            bundle.extractall(staging, filter="data")
+            _safe_extract(bundle, staging)
         manifest = json.loads((staging / "manifest.json").read_text())
         if manifest.get("database") != "netsecureai.sqlite3" or manifest.get("uploads") != "uploads":
             raise ValueError("Unsupported backup manifest")
