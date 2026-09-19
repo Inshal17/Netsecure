@@ -1,0 +1,17 @@
+{
+  "name": "netsecureai-fabric-gateway",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "@hyperledger/fabric-gateway": "^1.8.0",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
